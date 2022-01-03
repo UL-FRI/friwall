@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<p>
+Tu lahko urejate preusmeritve DNAT za IPv4.
+
+<form id="request" method="POST">
+{% for int_ip, ext_ip in dnat %}
+<p>
+<input name="ext_ip" value="{{ ext_ip }}"/>
+<input name="int_ip" value="{{ int_ip }}"/>
+{% endfor %}
+<button id="submit" type="submit">Shrani</button>
+</form>
+{% endblock %}

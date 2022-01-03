@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- {{ get_flashed_messages() }}-->
+<form method="POST">
+<p>
+<label for="username">Uporabnik</label> {{ form.username() }}
+<p>
+<label for="password">Geslo</label> {{ form.password() }}
+<p style="color: red;">{{ form.errors['username'] | join(' ') }}
+
+<p>
+{{ form.submit() }}
+{{ form.hidden_tag() }}
+</form>
+{% endblock %}

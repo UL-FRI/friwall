@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<p>
+Urejate datoteko <code>{{ name }}.json</code>.
+
+<form id="request" method="POST">
+<p><textarea name="text" style="width: 100%; height: 20em;">{{ content }}</textarea>
+<p><button id="submit" type="submit">Shrani</button>
+</form>
+
+{% endblock %}

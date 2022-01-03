@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<p>
+Tu lahko urejate splošne nastavitve.
+
+<form id="request" method="POST">
+<h2>Nastavitve</h2>
+{% for name, value in settings.items() %}
+<p>
+<input type="hidden" name="setting" value="{{ name }}" />
+<label>{{ name }}<br><input name="value" value="{{ value }}" /></label>
+{% endfor %}
+<p><button id="submit" type="submit">Shrani</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+
+<style>
+body {
+    hyphens: auto;
+    max-width: 66em;
+    margin: 1em auto;
+}
+code {
+    background-color: #eeeeee;
+}
+details {
+    margin: 0.5em 1em;
+}
+details > summary {
+    cursor: pointer;
+}
+details  > p {
+    margin: 0.5em;
+}
+h1 {
+    margin-bottom: 0.5em;
+}
+h1 > a {
+    color: unset;
+    text-decoration: none;
+}
+pre {
+    background-color: #eeeeee;
+    border: 1px solid black;
+    padding: 0.5em;
+    margin: 0;
+}
+ul.keys {
+    margin: 0 0.5em 0.5em;
+    padding-left: 1em;
+}
+ul.keys a {
+    text-decoration: none;
+}
+</style>
+
+<title>FRIwall</title>
+
+{% if current_user.is_authenticated %}
+<div style="float:right;">
+{{ current_user['username'] }} |
+<a href="{{ url_for('auth.logout') }}">Odjava</a>
+</div>
+{% endif %}
+
+<h1><a href="/">FRIwall</a></h1>
+
+{% block content %}{% endblock %}
