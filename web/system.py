@@ -161,8 +161,9 @@ def push(version=None):
 
                     # Push config tarfile.
                     syslog.syslog(f'updating {node} from {node_version} to {version}')
-                    result = subprocess.run([f'sftp root@{node}'], shell=True, text=True,
-                                            input=f'put {tarfile}\nput config/version\n', capture_output=True)
+                    result = subprocess.run([f'sftp -o ConnectTimeout=10 root@{node}'],
+                                            shell=True, text=True, capture_output=True,
+                                            input=f'put {tarfile}\nput config/version\n')
                     if result.returncode == 0:
                         nodes[node] = version
                         db.write('nodes', nodes)
