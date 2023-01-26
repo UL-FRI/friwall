@@ -50,9 +50,6 @@ def create_app(test_config=None):
     from . import config
     app.register_blueprint(config.blueprint)
 
-    from . import dnat
-    app.register_blueprint(dnat.blueprint)
-
     from . import vpn
     app.register_blueprint(vpn.blueprint)
 
