@@ -7,8 +7,8 @@ import subprocess
 import flask
 import flask_login
 
-from . import system
 from . import db
+from . import system
 
 blueprint = flask.Blueprint('vpn', __name__, url_prefix='/vpn')
 wgkey_regex = re.compile(r'^[A-Za-z0-9/+=]{44}$')

@@ -4,11 +4,8 @@ import collections
 import multiprocessing
 import os
 import shutil
-import sqlite3
 import subprocess
-import sys
 import syslog
-import time
 
 import click
 import flask

@@ -3,10 +3,6 @@ import json
 import pathlib
 import time
 
-import click
-import flask
-import flask.cli
-
 def lock(name):
     lockfile = pathlib.Path(f'{name}.lock')
     for i in range(5):
