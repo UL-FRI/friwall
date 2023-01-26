@@ -46,13 +46,3 @@ def load(name):
 def save(name, data):
     with locked(name):
         write(name, data)
-
-def init_app(app):
-    #app.teardown_appcontext(close_db)
-    app.cli.add_command(init_db)
-
-@click.command('init-db')
-@flask.cli.with_appcontext
-def init_db():
-    """Clear the existing data and create new tables."""
-    pass # TODO, if needed

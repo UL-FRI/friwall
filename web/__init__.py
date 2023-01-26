@@ -1,4 +1,5 @@
 import os
+import secrets
 
 import flask
 import flask_ldap3_login
@@ -6,16 +7,42 @@ import flask_login
 
 def create_app(test_config=None):
     app = flask.Flask(__name__)
-    app.config['DEBUG'] = True
-    app.config['SECRET_KEY'] = 'KagjQoUSTtjYC3GQPpfBHcpMJvZg5R1L'
 
-#    try:
-#        os.makedirs(app.instance_path)
-#    except OSError:
-#        pass
+    # Ensure all required keys exist.
+    settings = {
+        'debug': False,
+        'secret_key': secrets.token_urlsafe(32),
+        'ldap_host': '',
+        'ldap_port': '636',
+        'ldap_user': '',
+        'ldap_pass': '',
+        'ldap_admin': '',
+        'ldap_base_dn': '',
+        'ldap_user_dn': '',
+        'ldap_login_attr': 'userPrincipalName',
+        'wg_endpoint': '',
+        'wg_port': '51820',
+        'wg_key': '',
+        'wg_net': '',
+        'version': 0,
+    }
 
     from . import db
-    db.init_app(app)
+    with db.locked('settings'):
+        settings |= db.read('settings')
+        db.write('settings', settings)
+
+    app.config['DEBUG'] = settings.get('debug', False)
+    app.config['SECRET_KEY'] = settings.get('secret_key', '')
+    app.config['LDAP_USE_SSL'] = True
+    app.config['LDAP_HOST'] = settings.get('ldap_host', '')
+    app.config['LDAP_PORT'] = int(settings.get('ldap_port', '636'))
+    app.config['LDAP_BASE_DN'] = settings.get('ldap_base_dn', '')
+    app.config['LDAP_USER_DN'] = settings.get('ldap_user_dn', '')
+    app.config['LDAP_BIND_USER_DN'] = settings.get('ldap_user', '')
+    app.config['LDAP_BIND_USER_PASSWORD'] = settings.get('ldap_pass', '')
+    app.config['LDAP_USER_LOGIN_ATTR'] = settings.get('ldap_login_attr', 'userPrincipalName')
+    app.config['LDAP_USER_SEARCH_SCOPE'] = 'SUBTREE'
 
     from . import auth
     app.register_blueprint(auth.blueprint)
@@ -31,17 +58,6 @@ def create_app(test_config=None):
 
     from . import system
     system.init_app(app)
-
-    settings = db.load('settings')
-    app.config['LDAP_USE_SSL'] = True
-    app.config['LDAP_HOST'] = settings.get('ldap_host', '')
-    app.config['LDAP_PORT'] = int(settings.get('ldap_port', '636'))
-    app.config['LDAP_BASE_DN'] = settings.get('ldap_base_dn', '')
-    app.config['LDAP_USER_DN'] = settings.get('ldap_user_dn', '')
-    app.config['LDAP_BIND_USER_DN'] = settings.get('ldap_user', '')
-    app.config['LDAP_BIND_USER_PASSWORD'] = settings.get('ldap_pass', '')
-    app.config['LDAP_USER_LOGIN_ATTR'] = settings.get('ldap_login_attr', 'userPrincipalName')
-    app.config['LDAP_USER_SEARCH_SCOPE'] = 'SUBTREE'
 
     login_manager = flask_login.LoginManager(app)
     ldap_manager = flask_ldap3_login.LDAP3LoginManager(app)
