@@ -39,12 +39,12 @@ def new():
         server_pubkey = subprocess.run([f'wg pubkey'], input=settings.get('wg_key'),
                 text=True, capture_output=True, shell=True).stdout.strip()
 
+        host = ipaddress.ip_interface(settings.get('wg_net', '10.0.0.1/24'))
         with db.locked('wireguard'):
             # Find a free address for the new key.
             ips = db.read('wireguard')
-            network = ipaddress.ip_network(settings.get('wg_net', '10.0.0.1/24'), strict=False)
-            for ip in network.hosts():
-                if str(ip) not in ips:
+            for ip in host.network.hosts():
+                if ip != host.ip and str(ip) not in ips:
                     break
             else:
                 return flask.Response('no more available IP addresses', status=500, mimetype='text/plain')
