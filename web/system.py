@@ -52,7 +52,7 @@ def save_config():
             version = settings['version'] = int(settings.get('version', 0)) + 1
 
             # Populate IP sets.
-            wireguard = db.read('wireguard')
+            wireguard = db.load('wireguard')
             ipsets = collections.defaultdict(set)
             for ip, key in wireguard.items():
                 for group in user_groups.get(key.get('user', ''), ()):
@@ -137,15 +137,15 @@ def generate():
 @click.option('--version', '-v', type=click.INT, default=None, help="Config version to push")
 @flask.cli.with_appcontext
 def push(version=None):
-    if version is None:
-        version = db.load('settings').get('version', 0)
-
-    # Write wanted version to file for uploading to firewall nodes.
-    with open('config/version', 'w') as f:
-        print(version, file=f)
-
     try:
         with db.locked('nodes'):
+            if version is None:
+                version = db.load('settings').get('version', 0)
+
+            # Write wanted version to file for uploading to firewall nodes.
+            with open('config/version', 'w') as f:
+                print(version, file=f)
+
             nodes = db.read('nodes')
             tarfile = f'config/{version}.tar.gz'
 
