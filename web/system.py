@@ -3,6 +3,7 @@
 import collections
 import multiprocessing
 import os
+import pathlib
 import shutil
 import subprocess
 import syslog
@@ -60,7 +61,7 @@ def save_config():
                         ipsets[network].add(f'{ip}/32')
 
             # Create config files.
-            output = f'config/{version}'
+            output = pathlib.Path.home() / 'config' / f'{version}'
             shutil.rmtree(output, ignore_errors=True)
             os.makedirs(f'{output}/etc/nftables.d', exist_ok=True)
             os.makedirs(f'{output}/etc/wireguard', exist_ok=True)
@@ -108,10 +109,10 @@ PrivateKey = {settings.get('wg_key')}
 
             # Make a config archive in a temporary place, so we don’t send
             # incomplete tars.
-            tarfile = shutil.make_archive(f'{output}-tmp', 'gztar', root_dir=output, owner='root', group='root')
+            tar_file = shutil.make_archive(f'{output}-tmp', 'gztar', root_dir=output, owner='root', group='root')
 
             # Move config archive to the final destination.
-            os.rename(tarfile, f'{output}.tar.gz')
+            os.rename(tar_file, f'{output}.tar.gz')
 
             # If we get here, write settings with the new version.
             db.write('settings', settings)
@@ -143,16 +144,17 @@ def push(version=None):
                 version = db.load('settings').get('version', 0)
 
             # Write wanted version to file for uploading to firewall nodes.
-            with open('config/version', 'w') as f:
+            version_file = pathlib.Path.home() / 'config' / 'version'
+            with open(version_file, 'w') as f:
                 print(version, file=f)
 
             nodes = db.read('nodes')
-            tarfile = f'config/{version}.tar.gz'
+            tar_file = pathlib.Path.home() / 'config' / f'{version}.tar.gz'
 
             done = True
             for node, node_version in nodes.items():
                 if node_version != version:
-                    if not os.path.exists(tarfile):
+                    if not os.path.exists(tar_file):
                         syslog.syslog(f'wanted to push version {version} but {version}.tar.gz doesn’t exist')
                         return
 
@@ -160,7 +162,7 @@ def push(version=None):
                     syslog.syslog(f'updating {node} from {node_version} to {version}')
                     result = subprocess.run([f'sftp -o ConnectTimeout=10 root@{node}'],
                                             shell=True, text=True, capture_output=True,
-                                            input=f'put {tarfile}\nput config/version\n')
+                                            input=f'put {tar_file}\nput {version_file}\n')
                     if result.returncode == 0:
                         nodes[node] = version
                         db.write('nodes', nodes)

@@ -1,6 +1,8 @@
 #!/bin/sh
 
-(echo ; inotifywait -m --include '[0-9]*\.tar\.gz' -e create config) |
+cd ~/app
+
+(echo ; inotifywait -m --include '[0-9]*\.tar\.gz' -e create ~/config) |
 while read ; do
         FLASK_APP=web python3 -m flask push
 done
