@@ -57,8 +57,8 @@ def save_config():
             ipsets = collections.defaultdict(set)
             for ip, key in wireguard.items():
                 for group in user_groups.get(key.get('user', ''), ()):
-                    for network in groups[group]:
-                        ipsets[network].add(f'{ip}/32')
+                    for name in groups[group]:
+                        ipsets[name].add(f'{ip}/32')
 
             # Create config files.
             output = pathlib.Path.home() / 'config' / f'{version}'
@@ -75,8 +75,8 @@ set {name} {{
     typeof ip daddr; flags interval
     elements = {{ {', '.join(ips)} }}
 }}'''
-                for name, networks in ipsets.items():
-                    print(format_set(name, networks), file=f)
+                for name, ips in ipsets.items():
+                    print(format_set(name, ips), file=f)
 
             # Print forwarding rules.
             with open(f'{output}/etc/nftables.d/forward.nft', 'w', encoding='utf-8') as f:
