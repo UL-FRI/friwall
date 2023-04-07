@@ -18,6 +18,7 @@ def index():
             if flask.request.method == 'POST':
                 form = flask.request.form
                 db.write('settings', dict(zip(form.getlist('setting'), form.getlist('value'))))
+                system.run(system.save_config)
             settings = db.read('settings')
         return flask.render_template('config/index.html', **locals())
     except Exception as e:
