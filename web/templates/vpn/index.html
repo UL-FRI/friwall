@@ -30,7 +30,7 @@ Nastavitve shranite (kot skrbnik) v <code>/etc/wireguard/wg-fri.conf</code>. VPN
 Vnesite poljubno oznako in kliknite <em>Ustvari ključ</em>. Če vklopite prvo opcijo, bo vaš računalnik čez VPN usmeril ves mrežni promet, ne le tistega, ki je namenjen strežnikom na FRI. Če izklopite drugo opcijo, bodo nekatere storitve dostopne le prek naslova IP. Če ste v dvomih, pustite privzete nastavitve.
 
 <p>
-<input id="comment" name="comment" pattern="[\w ]*" maxlength="16" placeholder="Oznaka ključa" />
+<input id="name" name="name" pattern="[\w ]*" maxlength="16" placeholder="Ime naprave" />
 <br>
 <input type="checkbox" id="add_default" name="add_default" />
 <label for="add_default">Uporabi VPN za ves promet</label>
@@ -112,7 +112,7 @@ function fetch_keys() {
             li.innerHTML = ' ' + (new Date(key.time*1000).toISOString().split('T')[0]) +
 		' <code>' + key.key + '</code>' +
                 (key.active ? '<font color="red"><sup>★</sup></font> ' : ' ') +
-                key.comment;
+                key.name;
             li.prepend(a);
             keys.appendChild(li);
             if (key.active)
@@ -128,7 +128,7 @@ window.addEventListener('load', fetch_keys);
 const request = document.getElementById('request');
 request.addEventListener('submit', event => {
     event.preventDefault();
-    const comment = document.getElementById('comment');
+    const name = document.getElementById('name');
     const key = wireguard.generateKeypair();
     const settings = document.getElementById('settings');
     const submit = document.getElementById('submit');
@@ -143,7 +143,7 @@ request.addEventListener('submit', event => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             pubkey: key.publicKey,
-            comment: comment.value,
+            name: name.value,
             use_dns: use_dns.checked,
             add_default: add_default.checked,
 	})

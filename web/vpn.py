@@ -49,13 +49,13 @@ def new():
             else:
                 return flask.Response('no more available IP addresses', status=500, mimetype='text/plain')
             now = datetime.datetime.utcnow()
-            comment = re.sub('[^\w ]', '', flask.request.json.get('comment', ''))
+            name = re.sub('[^\w ]', '', flask.request.json.get('name', ''))
 
             ips[str(ip)] = {
                 'key': pubkey,
                 'time': now.timestamp(),
                 'user': flask_login.current_user.get_id(),
-                'comment': comment,
+                'name': name,
             }
             db.write('wireguard', ips)
 
@@ -70,7 +70,7 @@ def new():
             'pubkey': pubkey,
             'ip': str(ip),
             'timestamp': now,
-            'comment': comment,
+            'name': name,
             'add_default': flask.request.json.get('add_default', False),
             'use_dns': flask.request.json.get('use_dns', True),
         }
