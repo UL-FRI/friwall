@@ -56,17 +56,18 @@ def save_config():
             # Populate IP sets and translation maps for NAT.
             ipsets = collections.defaultdict(set)
             networks = db.load('networks')
-            nat = {}
-            netmap = {}
             for name, network in networks.items():
                 for ip in network.get('ip', ()):
                     ipsets[name].add(ip)
-                    if 'nat' in network:
-                        nat[ip] = network['nat']
                 for ip6 in network.get('ip6', ()):
                     ipsets[f'{name}6'].update(ip6)
-                netmap.update(network.get('netmap', {}))
 
+            # Load static and dynamic NAT translations.
+            nat = db.load('nat') # { network name: public range… }
+            netmap = db.load('netmap') # { private range: public range… }
+
+            # Add registered VPN addresses for each network based on
+            # LDAP group membership.
             wireguard = db.load('wireguard')
             for ip, key in wireguard.items():
                 for network in user_networks.get(key.get('user', ''), ()):
@@ -80,8 +81,7 @@ def save_config():
             os.makedirs(f'{output}/etc/nftables.d', exist_ok=True)
             os.makedirs(f'{output}/etc/wireguard', exist_ok=True)
 
-            # Add registered VPN addresses for each network based on
-            # LDAP group membership.
+            # Print nftables set for wireguard IPs.
             with open(f'{output}/etc/nftables.d/sets.nft', 'w', encoding='utf-8') as f:
                 def format_set(name, ips):
                     return f'''\
@@ -93,8 +93,8 @@ set {name} {{
                     if not name.endswith('6'):
                         print(format_set(name, ips), file=f)
 
-            # Print NAT (dynamic and 1:1) rules.
-            with open(f'{output}/etc/nftables.d/nat.nft', 'w', encoding='utf-8') as f:
+            # Print static NAT (1:1) rules.
+            with open(f'{output}/etc/nftables.d/netmap.nft', 'w', encoding='utf-8') as f:
                 def format_map(name, elements):
                     lines = ',\n'.join(f'{a}: {b}' for a, b in elements)
                     return f'''\
@@ -105,11 +105,14 @@ map {name} {{
     }}
 }}
 '''
-                if nat:
-                    print(format_map('nat', ((private, public) for private, public in nat.items())), file=f)
                 if netmap:
                     print(format_map('netmap-out', ((private, public) for private, public in netmap.items())), file=f)
                     print(format_map('netmap-in', ((public, private) for private, public in netmap.items())), file=f)
+
+            # Print dynamic NAT rules.
+            with open(f'{output}/etc/nftables.d/nat.nft', 'w', encoding='utf-8') as f:
+                for network, address in nat.items():
+                    print(f'iifname @inside oifname @outside ip saddr @{network} snat to {address}', file=f)
 
             # Print forwarding rules.
             with open(f'{output}/etc/nftables.d/forward.nft', 'w', encoding='utf-8') as f:
