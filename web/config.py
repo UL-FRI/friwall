@@ -14,7 +14,7 @@ def index():
     try:
         if not flask_login.current_user.is_admin:
             return flask.Response('forbidden', status=403, mimetype='text/plain')
-        with db.locked('settings'):
+        with db.locked():
             if flask.request.method == 'POST':
                 form = flask.request.form
                 db.write('settings', dict(zip(form.getlist('setting'), form.getlist('value'))))

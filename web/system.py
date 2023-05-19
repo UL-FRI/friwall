@@ -29,10 +29,11 @@ def run(fun, args=()):
 def save_config():
     output = None
     try:
-        # Just load the settings here but don’t lock the database while we load
-        # stuff from LDAP.
-        settings = db.load('settings')
-        groups = db.load('groups')
+        # Just load the settings here but keep the database unlocked
+        # while we load group memberships from LDAP.
+        with db.locked():
+            settings = db.read('settings')
+            groups = db.read('groups')
 
         # For each user build a list of networks they have access to, based on
         # group membership in AD. Only query groups associated with at least one
@@ -49,13 +50,13 @@ def save_config():
 
         # Now read the settings again and lock the database while generating
         # config files, then increment version before unlocking.
-        with db.locked('settings'):
+        with db.locked():
             settings = db.read('settings')
             version = settings['version'] = int(settings.get('version', 0)) + 1
 
             # Populate IP sets and translation maps for NAT.
             ipsets = collections.defaultdict(set)
-            networks = db.load('networks')
+            networks = db.read('networks')
             for name, network in networks.items():
                 for ip in network.get('ip', ()):
                     ipsets[name].add(ip)
@@ -63,12 +64,12 @@ def save_config():
                     ipsets[f'{name}6'].update(ip6)
 
             # Load static and dynamic NAT translations.
-            nat = db.load('nat') # { network name: public range… }
-            netmap = db.load('netmap') # { private range: public range… }
+            nat = db.read('nat') # { network name: public range… }
+            netmap = db.read('netmap') # { private range: public range… }
 
             # Add registered VPN addresses for each network based on
             # LDAP group membership.
-            wireguard = db.load('wireguard')
+            wireguard = db.read('wireguard')
             for ip, key in wireguard.items():
                 for network in user_networks.get(key.get('user', ''), ()):
                     ipsets[network].add(f'{ip}/32')
@@ -116,7 +117,7 @@ map {name} {{
 
             # Print forwarding rules.
             with open(f'{output}/etc/nftables.d/forward.nft', 'w', encoding='utf-8') as f:
-                for forward in db.load('forwards'):
+                for forward in db.read('forwards'):
                     print(forward, file=f)
 
             # Print wireguard config.

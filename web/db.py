@@ -13,12 +13,12 @@ def lock(name, timeout=5):
             time.sleep(1)
     raise TimeoutError(f'could not lock {name}')
 
-def unlock(name):
+def unlock(name='db'):
     lockfile = pathlib.Path.home() / f'{name}.lock'
     lockfile.unlink(missing_ok=True)
 
 @contextlib.contextmanager
-def locked(name):
+def locked(name='db'):
     lock(name)
     try:
         yield name
@@ -36,9 +36,9 @@ def write(name, data):
         f.close()
 
 def load(name):
-    with locked(name):
+    with locked():
         return read(name)
 
 def save(name, data):
-    with locked(name):
+    with locked():
         write(name, data)

@@ -28,7 +28,7 @@ def create_app(test_config=None):
     }
 
     from . import db
-    with db.locked('settings'):
+    with db.locked():
         settings |= db.read('settings')
         db.write('settings', settings)
 

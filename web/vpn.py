@@ -40,7 +40,7 @@ def new():
                 text=True, capture_output=True, shell=True).stdout.strip()
 
         host = ipaddress.ip_interface(settings.get('wg_net', '10.0.0.1/24'))
-        with db.locked('wireguard'):
+        with db.locked():
             # Find a free address for the new key.
             ips = db.read('wireguard')
             for ip in host.network.hosts():
@@ -88,7 +88,7 @@ def delete():
         return flask.Response('invalid key', status=400, mimetype='text/plain')
 
     try:
-        with db.locked('wireguard'):
+        with db.locked():
             user = flask_login.current_user.get_id()
             ips = {k: v for k, v in db.read('wireguard').items() if v.get('user') != user or v.get('key') != pubkey}
             db.write('wireguard', ips)
