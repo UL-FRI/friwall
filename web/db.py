@@ -3,9 +3,9 @@ import json
 import pathlib
 import time
 
-def lock(name):
+def lock(name, timeout=5):
     lockfile = pathlib.Path.home() / f'{name}.lock'
-    for i in range(5):
+    for i in range(timeout):
         try:
             lockfile.symlink_to('/dev/null')
             return
