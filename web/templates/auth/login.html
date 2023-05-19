@@ -4,9 +4,9 @@
 <!-- {{ get_flashed_messages() }}-->
 <form method="POST">
 <p>
-<label for="username">Uporabnik</label> {{ form.username() }}
+<label for="username">Uporabnik</label><br>{{ form.username() }}
 <p>
-<label for="password">Geslo</label> {{ form.password() }}
+<label for="password">Geslo</label><br>{{ form.password() }}
 <p style="color: red;">{{ form.errors['username'] | join(' ') }}
 
 <p>

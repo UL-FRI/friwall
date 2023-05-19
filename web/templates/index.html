@@ -1,15 +1,27 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<ul>
+<dl>
 {% if current_user.is_admin %}
-<li><a href="{{ url_for('config.index') }}">Nastavitve
-<li><a href="{{ url_for('config.edit', name='networks') }}">Omrežja
-<li><a href="{{ url_for('config.edit', name='nat') }}">NAT
-<li><a href="{{ url_for('config.edit', name='netmap') }}">Netmap
-<li><a href="{{ url_for('config.edit', name='groups') }}">Skupine
-<li><a href="{{ url_for('config.edit', name='forwards') }}">Luknje
+<section>
+<dt><a href="{{ url_for('config.index') }}">Nastavitve</a>
+<dd>nastavitve aplikacije FRIwall
+<dt><a href="{{ url_for('config.edit', name='networks') }}">Omrežja</a>
+<dd>definicije obsegov IP
+<dt><a href="{{ url_for('config.edit', name='forwards') }}">Luknje</a>
+<dd>pravila za posredovanje prometa
+<dt><a href="{{ url_for('config.edit', name='nat') }}">NAT</a>
+<dd>javni naslovi za pisarniška omrežja
+<dt><a href="{{ url_for('config.edit', name='netmap') }}">Netmap</a>
+<dd>statične 1:1 preslikave naslovov za strežniška omrežja
+<dt><a href="{{ url_for('config.edit', name='groups') }}">Skupine</a>
+<dd>preslikave uporabnikov LDAP v pisarniška omrežja
+</section>
+
 {% endif %}
-<li><a href="{{ url_for('vpn.index') }}">VPN
-</ul>
+<section>
+<dt><a href="{{ url_for('vpn.index') }}">VPN</a>
+<dd>urejanje ključev za WireGuard VPN
+</dl>
+</section>
 {% endblock %}
