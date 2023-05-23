@@ -113,7 +113,7 @@ map {name} {{
             # Print dynamic NAT rules.
             with open(f'{output}/etc/nftables.d/nat.nft', 'w', encoding='utf-8') as f:
                 for network, address in nat.items():
-                    print(f'iifname @inside oifname @outside ip saddr @{network} snat to {address}', file=f)
+                    print(f'iif @inside oif @outside ip saddr @{network} snat to {address}', file=f)
 
             # Print forwarding rules.
             with open(f'{output}/etc/nftables.d/forward.nft', 'w', encoding='utf-8') as f:
