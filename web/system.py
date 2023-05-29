@@ -117,8 +117,12 @@ map {name} {{
 
             # Print forwarding rules.
             with open(f'{output}/etc/nftables.d/forward.nft', 'w', encoding='utf-8') as f:
-                for forward in db.read('forwards'):
-                    print(forward, file=f)
+                for index, rule in enumerate(db.read('rules')):
+                    if rule.get('enabled') and rule.get('text'):
+                        if 'name' in rule:
+                            print(f'# {index}. {rule["name"]}', file=f)
+                            print(rule['text'], file=f)
+                            print(file=f)
 
             # Print wireguard config.
             with open(f'{output}/etc/wireguard/wg.conf', 'w', encoding='utf-8') as f:

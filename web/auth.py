@@ -11,7 +11,7 @@ class User(flask_login.UserMixin):
         self.dn = dn
         self.username = username
         self.data = data
-        self.groups = data.get('memberOf', [])
+        self.groups = set(data.get('memberOf', ()))
         try:
             self.is_admin = db.load('settings').get('ldap_admin') in self.groups
         except:

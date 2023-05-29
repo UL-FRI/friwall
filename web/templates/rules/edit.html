@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<p>
+Urejate pravilo #{{ index }}.
+
+<form id="request" method="POST">
+<p>
+<label for="name">Ime</label><br>
+<input name="name" value="{{ rule.name }}" />
+
+<p>
+Uporabniki, ki lahko o(ne)mogočijo pravilo<br>
+{% for manager in rule.managers %}
+<input name="manager" type="text" style="width: 50%" value="{{ manager }}" /><br>
+{% endfor %}
+<input name="manager" type="text" style="width: 50%" value="" />
+
+<p>
+<label for="text">Pravila nftables</label>
+<textarea id="text" name="text" style="width: 100%; height: 20em;">{{ rule.text }}</textarea>
+<p><button id="submit" type="submit">Shrani</button>
+</form>
+
+{% endblock %}

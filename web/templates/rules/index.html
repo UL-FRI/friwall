@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<p>
+Urejate prioritete pravil za požarni zid. Pravilo odstranite tako, da izbrišete pripadajočo številko. V zadnji vrstici lahko dodate novo pravilo.
+
+<form id="request" method="POST">
+<table>
+<tbody>
+{% for rule in rules %}
+<tr>
+<td><input name="index" type="number" min="0" size="2" value="{{ loop.index * 10 }}" />
+<td><input type="hidden" name="name" value="{{ rule.name }}" />
+<a href="{{ url_for('rules.edit', index=loop.index0) }}">{{ rule.name }}</a>
+{% endfor %}
+<tr>
+<td><input name="index" type="number" min="0" size="2" />
+<td><input name="name" type="text" size="40" />
+</table>
+<p><button id="submit" type="submit">Shrani</button>
+</form>
+
+{% endblock %}
