@@ -10,8 +10,7 @@ def create_app(test_config=None):
 
     # Ensure all required keys exist.
     settings = {
-        'debug': False,
-        'secret_key': secrets.token_urlsafe(32),
+        'secret_key': secrets.token_hex(),
         'ldap_host': '',
         'ldap_port': '636',
         'ldap_user': '',
@@ -32,7 +31,6 @@ def create_app(test_config=None):
         settings |= db.read('settings')
         db.write('settings', settings)
 
-    app.config['DEBUG'] = settings.get('debug', False)
     app.config['SECRET_KEY'] = settings.get('secret_key', '')
     app.config['LDAP_USE_SSL'] = True
     app.config['LDAP_HOST'] = settings.get('ldap_host', '')
