@@ -75,6 +75,10 @@ def save_config():
             os.makedirs(f'{output}/etc/nftables.d', exist_ok=True)
             os.makedirs(f'{output}/etc/wireguard', exist_ok=True)
 
+            # Print version.
+            with open(f'{output}/version', 'w', encoding='utf-8') as f:
+                print(version, file=f)
+
             # Print nftables sets.
             with open(f'{output}/etc/nftables.d/sets.nft', 'w', encoding='utf-8') as f:
                 def format_set(name, ips):
