@@ -43,7 +43,7 @@ def edit(index):
                 form = flask.request.form
                 rules = db.read('rules')
                 rules[index]['name'] = form.get('name')
-                rules[index]['text'] = form.get('text')
+                rules[index]['text'] = form.get('text').replace('\r\n', '\n')
                 rules[index]['managers'] = [m for m in form.getlist('manager') if m]
                 db.write('rules', rules)
             system.run(system.save_config)

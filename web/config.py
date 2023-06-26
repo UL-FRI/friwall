@@ -33,7 +33,7 @@ def edit(name):
             return flask.Response('forbidden', status=403, mimetype='text/plain')
         if flask.request.method == 'POST':
             form = flask.request.form
-            db.save(name, json.loads(form.get('text')))
+            db.save(name, json.loads(form.get('text').replace('\r\n', '\n')))
             system.run(system.save_config)
         content = json.dumps(db.load(name), indent=2)
         return flask.render_template('config/edit.html', **locals())
