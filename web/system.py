@@ -81,7 +81,7 @@ def save_config():
                     return f'''\
 set {name} {{
     type {"ipv6_addr" if name.endswith('/6') else "ipv4_addr"}; flags interval
-    elements = {{ {', '.join(ips)} }}
+    {"" if ips else "# "}elements = {{ {", ".join(ips)} }}
 }}'''
                 for name, ips in ipsets.items():
                     print(format_set(name, ips), file=f)
