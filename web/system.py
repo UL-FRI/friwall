@@ -171,11 +171,6 @@ def push(version=None):
             if version is None:
                 version = db.load('settings').get('version', 0)
 
-            # Write wanted version to file for uploading to firewall nodes.
-            version_file = pathlib.Path.home() / 'config' / 'version'
-            with open(version_file, 'w') as f:
-                print(version, file=f)
-
             nodes = db.read('nodes')
             tar_file = pathlib.Path.home() / 'config' / f'{version}.tar.gz'
 
@@ -186,17 +181,19 @@ def push(version=None):
                         syslog.syslog(f'wanted to push version {version} but {version}.tar.gz doesn’t exist')
                         return
 
-                    # Push config tarfile.
-                    syslog.syslog(f'updating {node} from {node_version} to {version}')
-                    result = subprocess.run([f'sftp -o ConnectTimeout=10 root@{node}'],
-                                            shell=True, text=True, capture_output=True,
-                                            input=f'put {tar_file}\nput {version_file}\n')
+                    # Push config tarfile to node. There sshd runs a forced command that
+                    # reads in a tarball, copies files to /etc and reloads services.
+                    syslog.syslog(f'updating config for {node} from v{node_version} to v{version}')
+                    result = subprocess.run([f'ssh -T -o ConnectTimeout=10 root@{node}'],
+                                            stdin=open(tar_file), shell=True, capture_output=True)
                     if result.returncode == 0:
                         nodes[node] = version
                         db.write('nodes', nodes)
+                        syslog.syslog(f'successfully updated config for {node} to v{version}')
                     else:
-                        syslog.syslog(f'error updating node {node}: {result.stderr}')
                         done = False
+                        syslog.syslog(f'error updating config for node {node} to v{version}: {result.stderr}')
+                        # TODO notify by mail
         return done
 
     except Exception as e:
