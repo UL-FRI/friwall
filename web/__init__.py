@@ -1,4 +1,5 @@
 import os
+import syslog
 import secrets
 
 import flask
@@ -7,6 +8,7 @@ import flask_login
 
 def create_app(test_config=None):
     app = flask.Flask(__name__)
+    syslog.openlog('friwall')
 
     # Ensure all required keys exist.
     settings = {
@@ -19,6 +21,7 @@ def create_app(test_config=None):
         'ldap_base_dn': '',
         'ldap_user_dn': '',
         'ldap_login_attr': 'userPrincipalName',
+        'admin_mail': '',
         'wg_endpoint': '',
         'wg_port': '51820',
         'wg_key': '',

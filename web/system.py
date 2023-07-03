@@ -1,11 +1,16 @@
 #!/usr/bin/python3
 
 import collections
+import email.message
+import getpass
 import multiprocessing
 import os
 import pathlib
 import shutil
+import smtplib
+import socket
 import subprocess
+import sys
 import syslog
 
 import click
@@ -14,6 +19,15 @@ import flask.cli
 import ldap3
 
 from . import db
+
+def mail(rcpt, subject, body):
+    msg = email.message.EmailMessage()
+    msg['Subject'] = f'friwall: {subject}'
+    msg['From'] = f'{getpass.getuser()}@{socket.getfqdn()}'
+    msg['To'] = rcpt
+    msg.set_content(body)
+    with smtplib.SMTP('localhost') as server:
+        server.send_message(msg)
 
 def init_app(app):
     app.cli.add_command(generate)
@@ -147,11 +161,15 @@ AllowedIPs = {ip}
             return True
 
     except Exception as e:
-        syslog.syslog(f'exception while generating config: {e}')
         import traceback
-        with open('/tmp/wtflog', 'a+') as f:
-            traceback.print_exc(file=f)
+        e.add_note(f'exception while generating config: {e}')
+        msg = traceback.format_exc()
+        if rcpt := settings.get('admin_mail'):
+            mail(rcpt, 'error generating config', msg)
+        # TODO this doesn’t seem to work
+        #syslog.syslog(msg)
         return False
+
     finally:
         # Remove temporary directory.
         if output:
@@ -174,30 +192,31 @@ def push(version=None):
             nodes = db.read('nodes')
             tar_file = pathlib.Path.home() / 'config' / f'{version}.tar.gz'
 
-            done = True
+            errors = []
             for node, node_version in nodes.items():
                 if node_version != version:
-                    if not os.path.exists(tar_file):
-                        syslog.syslog(f'wanted to push version {version} but {version}.tar.gz doesn’t exist')
-                        return
-
-                    # Push config tarfile to node. There sshd runs a forced command that
-                    # reads in a tarball, copies files to /etc and reloads services.
-                    syslog.syslog(f'updating config for {node} from v{node_version} to v{version}')
-                    result = subprocess.run([f'ssh -T -o ConnectTimeout=10 root@{node}'],
-                                            stdin=open(tar_file), shell=True, capture_output=True)
-                    if result.returncode == 0:
-                        nodes[node] = version
-                        db.write('nodes', nodes)
-                        syslog.syslog(f'successfully updated config for {node} to v{version}')
-                    else:
-                        done = False
-                        syslog.syslog(f'error updating config for node {node} to v{version}: {result.stderr}')
-                        # TODO notify by mail
-        return done
+                    try:
+                        # Push config tarfile to node. There sshd runs a forced command that
+                        # reads in a tarball, copies files to /etc and reloads services.
+                        syslog.syslog(f'updating config for {node} from v{node_version} to v{version}')
+                        result = subprocess.run(['/usr/bin/ssh', '-T', '-o', 'ConnectTimeout=10', f'root@{node}'],
+                                                stdin=open(tar_file), capture_output=True, text=True)
+                        if result.returncode == 0:
+                            nodes[node] = version
+                            db.write('nodes', nodes)
+                            syslog.syslog(f'successfully updated config for {node} to v{version}')
+                        else:
+                            raise RuntimeError(f'error updating config to v{version}: {result.stderr}')
+                    except (FileNotFoundError, RuntimeError) as e:
+                        e.add_note(f'error while updating node {node}')
+                        errors.append(e)
+            if errors:
+                raise ExceptionGroup('errors while updating nodes', errors)
 
     except Exception as e:
         import traceback
-        with open('/tmp/wtflog', 'a+') as f:
-            traceback.print_exc(file=f)
-        return False
+        msg = traceback.format_exc()
+        if rcpt := db.load('settings').get('admin_mail'):
+            mail(rcpt, 'error updating nodes', msg)
+        syslog.syslog(msg)
+
