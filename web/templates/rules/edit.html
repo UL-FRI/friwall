@@ -2,7 +2,7 @@
 
 {% block content %}
 <p>
-Urejate pravilo #{{ index }}.
+Urejate pravilo #{{ index }}. <a href="{{ url_for('rules.index') }}">Seznam pravil.</a>
 
 <form id="request" method="POST">
 <p>

@@ -4,17 +4,17 @@
 <p>
 Tu lahko vklopite in izklopite posamezna pravila za požarni zid.
 
-<dl>
 {% for rule in rules %}
-<dt>
+<details>
+<summary>
 {% if rule.enabled %}
-<font color="green">●</font> {{ rule.name }} <a href="{{ url_for('rules.toggle', index=rule.index, enable='false') }}">onemogoči</a>
+<font color="green">●</font> {{ rule.name }} <a href="{{ url_for('rules.toggle', index=rule.index, enable='false') }}">izklopi</a>
 {% else %}
-<font color="red">●</font> {{ rule.name }} <a href="{{ url_for('rules.toggle', index=rule.index, enable='true') }}">omogoči</a>
+<font color="red">●</font> {{ rule.name }} <a href="{{ url_for('rules.toggle', index=rule.index, enable='true') }}">vklopi</a>
 {% endif %}
-<dd>
+</summary>
 <pre><code>{{ rule.text }}</code></pre>
+</details>
 {% endfor %}
-</dl>
 
 {% endblock %}
