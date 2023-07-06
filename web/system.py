@@ -70,7 +70,7 @@ def save_config():
 
             # Populate IP sets and translation maps for NAT.
             ipsets = collections.defaultdict(set)
-            for name, network in db.read('networks').items():
+            for name, network in db.read('ipsets').items():
                 ipsets[name].update(network.get('ip', ()))
                 ipsets[f'{name}/6'].update(network.get('ip6', ()))
 
