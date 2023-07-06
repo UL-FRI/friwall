@@ -68,7 +68,7 @@ def save_config():
             settings = db.read('settings')
             version = settings['version'] = int(settings.get('version', 0)) + 1
 
-            # Populate IP sets and translation maps for NAT.
+            # Populate IP sets.
             ipsets = collections.defaultdict(set)
             for name, network in db.read('ipsets').items():
                 ipsets[name].update(network.get('ip', ()))
@@ -123,7 +123,8 @@ map {name} {{
             with open(f'{output}/etc/nftables.d/nat.nft', 'w', encoding='utf-8') as f:
                 nat = db.read('nat') # { network name: public range… }
                 for network, address in nat.items():
-                    print(f'iif @inside oif @outside ip saddr @{network} snat to {address}', file=f)
+                    if address:
+                        print(f'iif @inside oif @outside ip saddr @{network} snat to {address}', file=f)
 
             # Print forwarding rules.
             with open(f'{output}/etc/nftables.d/forward.nft', 'w', encoding='utf-8') as f:

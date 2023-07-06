@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<p>
+Urejate naslove NAT za pisarniška omrežja.
+
+<form id="request" method="POST">
+<table>
+<tbody>
+{% for office, address in nat.items() %}
+<tr>
+<td><label for="{{ office }}">{{ office }}</label>
+<td><input id="{{ office }}" name="{{ office }}" value="{{ address }}" />
+{% endfor %}
+</table>
+<p><button id="submit" type="submit">Shrani</button>
+</form>
+
+{% endblock %}
