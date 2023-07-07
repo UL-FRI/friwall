@@ -21,13 +21,16 @@ import ldap3
 from . import db
 
 def mail(rcpt, subject, body):
-    msg = email.message.EmailMessage()
-    msg['Subject'] = f'friwall: {subject}'
-    msg['From'] = f'{getpass.getuser()}@{socket.getfqdn()}'
-    msg['To'] = rcpt
-    msg.set_content(body)
-    with smtplib.SMTP('localhost') as server:
-        server.send_message(msg)
+    try:
+        msg = email.message.EmailMessage()
+        msg['Subject'] = f'friwall: {subject}'
+        msg['From'] = f'{getpass.getuser()}@{socket.getfqdn()}'
+        msg['To'] = rcpt
+        msg.set_content(body)
+        with smtplib.SMTP('localhost') as server:
+            server.send_message(msg)
+    except Exception as e:
+        syslog.syslog(f'error sending mail: {e}')
 
 def init_app(app):
     app.cli.add_command(generate)
