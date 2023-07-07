@@ -21,6 +21,8 @@ def index():
                 system.run(system.save_config)
             settings = db.read('settings')
         return flask.render_template('config/index.html', **locals())
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')
@@ -37,6 +39,8 @@ def edit(name):
             system.run(system.save_config)
         content = json.dumps(db.load(name), indent=2)
         return flask.render_template('config/edit.html', **locals())
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')

@@ -24,6 +24,8 @@ def list():
     try:
         user = flask_login.current_user.get_id()
         return flask.jsonify({k: v for k, v in db.load('wireguard').items() if v.get('user') == user})
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'failed: {e}', status=500, mimetype='text/plain')
 
@@ -75,7 +77,8 @@ def new():
             'use_dns': flask.request.json.get('use_dns', True),
         }
         return flask.render_template('vpn/wg-fri.conf', **args)
-
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')
@@ -96,7 +99,8 @@ def delete():
         system.run(system.save_config)
 
         return flask.Response(f'deleted key {pubkey}', status=200, mimetype='text/plain')
-
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')

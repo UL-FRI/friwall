@@ -96,6 +96,8 @@ def create_app(test_config=None):
                 version = db.load('settings').get('version')
                 nodes = db.read('nodes')
             return flask.render_template('nodes.html', version=version, nodes=nodes)
+        except TimeoutError:
+            return flask.render_template('busy.html')
         except Exception as e:
             return flask.Response(f'something went catastrophically wrong: {e}',
                     status=400, mimetype='text/plain')

@@ -27,7 +27,8 @@ def index():
                 return flask.redirect(flask.url_for('nat.index'))
 
             return flask.render_template('nat/index.html', nat=nat)
-
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')

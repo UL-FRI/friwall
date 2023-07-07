@@ -27,6 +27,8 @@ def index():
             system.run(system.save_config)
 
         return flask.render_template('rules/index.html', rules=db.load('rules'))
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')
@@ -51,6 +53,8 @@ def edit(index):
         return flask.render_template('rules/edit.html', index=index, rule=db.load('rules')[index])
     except IndexError as e:
         return flask.Response(f'invalid rule: {index}', status=400, mimetype='text/plain')
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')
@@ -65,6 +69,8 @@ def manage():
         rules = [rule|{'index': index} for index, rule in enumerate(db.load('rules'))
                  if can_toggle(flask_login.current_user, rule)]
         return flask.render_template('rules/manage.html', rules=rules)
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')
@@ -83,6 +89,8 @@ def toggle(index, enable):
         return flask.redirect(flask.url_for('rules.manage'))
     except IndexError as e:
         return flask.Response(f'invalid rule: {index}', status=400, mimetype='text/plain')
+    except TimeoutError:
+        return flask.render_template('busy.html')
     except Exception as e:
         return flask.Response(f'something went catastrophically wrong: {e}',
                 status=400, mimetype='text/plain')
