@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<dl>
 {% if current_user.is_admin %}
 <section>
+<dl>
+<dt><a href="{{ url_for('nodes') }}">Status</a>
+<dd>status opek v požarnem zidu
 <dt><a href="{{ url_for('config.index') }}">Nastavitve</a>
 <dd>nastavitve aplikacije FRIwall
 <dt><a href="{{ url_for('config.edit', name='ipsets') }}">Obsegi IP</a>
@@ -16,10 +18,12 @@
 <dd>statične 1:1 preslikave naslovov za strežniška omrežja
 <dt><a href="{{ url_for('config.edit', name='groups') }}">Skupine</a>
 <dd>preslikave uporabnikov LDAP v pisarniška omrežja
+</dl>
 </section>
 
 {% endif %}
 <section>
+<dl>
 <dt><a href="{{ url_for('vpn.index') }}">VPN</a>
 <dd>urejanje ključev za WireGuard VPN
 <dt><a href="{{ url_for('rules.manage') }}">Pravila</a>

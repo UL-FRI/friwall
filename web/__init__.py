@@ -86,4 +86,18 @@ def create_app(test_config=None):
     def home():
         return flask.render_template('index.html')
 
+    @app.route('/nodes')
+    @flask_login.login_required
+    def nodes():
+        try:
+            if not flask_login.current_user.is_admin:
+                return flask.Response('forbidden', status=403, mimetype='text/plain')
+            with db.locked('nodes'):
+                version = db.load('settings').get('version')
+                nodes = db.read('nodes')
+            return flask.render_template('nodes.html', version=version, nodes=nodes)
+        except Exception as e:
+            return flask.Response(f'something went catastrophically wrong: {e}',
+                    status=400, mimetype='text/plain')
+
     return app
