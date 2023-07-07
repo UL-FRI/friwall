@@ -14,13 +14,20 @@ def index():
     try:
         if not flask_login.current_user.is_admin:
             return flask.Response('forbidden', status=403, mimetype='text/plain')
+
         with db.locked():
+            settings = db.read('settings')
+
             if flask.request.method == 'POST':
                 form = flask.request.form
-                db.write('settings', dict(zip(form.getlist('setting'), form.getlist('value'))))
+                for name, value in form.items():
+                    if name in settings:
+                        settings[name] = value
+                    db.write('settings', settings)
                 system.run(system.save_config)
-            settings = db.read('settings')
-        return flask.render_template('config/index.html', **locals())
+                return flask.redirect(flask.url_for('config.index'))
+
+            return flask.render_template('config/index.html', settings=settings)
     except TimeoutError:
         return flask.render_template('busy.html')
     except Exception as e:
