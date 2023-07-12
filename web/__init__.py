@@ -81,6 +81,15 @@ def create_app(test_config=None):
     def unauth_handler():
         return flask.redirect(flask.url_for('auth.login', next=flask.request.endpoint))
 
+    @app.errorhandler(TimeoutError)
+    def timeout_error(e):
+        return flask.render_template('busy.html')
+
+    @app.errorhandler(Exception)
+    def internal_server_error(e):
+        return flask.Response(f'something went catastrophically wrong: {e}',
+                status=500, mimetype='text/plain')
+
     @app.route('/')
     @flask_login.login_required
     def home():
