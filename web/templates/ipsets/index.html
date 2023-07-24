@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<p>
+Urejate območja IP. Za vsako območje lahko dodate enega ali več obsegov IP in/ali IPv6, ločenih s presledki.
+
+<form id="request" method="POST">
+<table>
+<thead>
+<th>Ime<th>IP<th>IPv6
+<tbody>
+<tbody>
+{% for name, addresses in ipsets.items() %}
+<tr>
+<td><input name="name" value="{{ name }}" />
+<td><input name="ip" value="{{ addresses.ip|join(' ') }}" />
+<td><input name="ip6" value="{{ addresses.ip6|join(' ') }}" />
+{% endfor %}
+<tr>
+<td><input name="name" />
+<td><input name="ip" />
+<td><input name="ip6" />
+</table>
+<p><button id="submit" type="submit">Shrani</button>
+</form>
+
+{% endblock %}

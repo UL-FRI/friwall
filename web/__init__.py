@@ -51,6 +51,9 @@ def create_app(test_config=None):
     from . import config
     app.register_blueprint(config.blueprint)
 
+    from . import ipsets
+    app.register_blueprint(ipsets.blueprint)
+
     from . import nat
     app.register_blueprint(nat.blueprint)
 

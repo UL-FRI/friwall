@@ -2,7 +2,7 @@
 
 {% block content %}
 <p>
-Urejate pravilo #{{ index }}. <a href="{{ url_for('rules.index') }}">Seznam pravil.</a>
+Urejate pravilo #{{ index }}. V pravilih lahko uporabljate imena območij IP, prikazana spodaj. <a href="{{ url_for('rules.index') }}">Seznam pravil.</a>
 
 <form id="request" method="POST">
 <p>
@@ -21,5 +21,17 @@ Uporabniki, ki lahko o(ne)mogočijo pravilo<br>
 <textarea id="text" name="text" style="width: 100%; height: 20em;">{{ rule.text }}</textarea>
 <p><button id="submit" type="submit">Shrani</button>
 </form>
+
+<table>
+<thead>
+<th>Območje<th>IP<th>IPv6
+<tbody>
+{% for network, addresses in ipsets.items() %}
+<tr>
+<td>{{ network }}
+<td>{{ addresses.ip|join('<br>')|safe }}
+<td>{{ addresses.ip6|join('<br>')|safe }}
+{% endfor %}
+</table>
 
 {% endblock %}
