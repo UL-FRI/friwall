@@ -1,4 +1,5 @@
+authlib
 click
 flask
 flask-login
-flask-ldap3-login
+ldap3

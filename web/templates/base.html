@@ -53,7 +53,7 @@ ul.keys a {
 {% if current_user.is_authenticated %}
 <div style="float:right;">
 {{ current_user['username'] }} |
-<a href="{{ url_for('auth.logout') }}">Odjava</a>
+<a href="{{ url_for('logout') }}">Odjava</a>
 </div>
 {% endif %}
 
