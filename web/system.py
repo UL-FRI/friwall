@@ -58,12 +58,15 @@ def save_config():
         user_networks = collections.defaultdict(set)
         ldap = ldap3.Connection(ldap3.Server(settings.get('ldap_host'), use_ssl=True),
                 settings.get('ldap_user'), settings.get('ldap_pass'), auto_bind=True)
-        for group, network in groups.items():
-            ldap.search(settings.get('ldap_base_dn', ''),
-                        f'(distinguishedName={group})', attributes='member')
-            if ldap.entries:
-                for user in ldap.entries[0]['member']:
-                    user_networks[user].add(network)
+        ldap.search(settings.get('ldap_base_dn', ''),
+                    '(&(objectClass=user)(objectCategory=person)' + # only people
+                    '(!(userAccountControl:1.2.840.113556.1.4.803:=2))' + # with enabled accounts
+                    f'(memberOf:1.2.840.113556.1.4.1941:={settings.get("user_group", "")}))', # in given group, recursively
+                    attributes=['userPrincipalName', 'memberOf'])
+        for entry in ldap.entries:
+            for group in entry.memberOf:
+                if group in groups:
+                    user_networks[entry.userPrincipalName.value].add(groups[group])
 
         # Now read the settings again and lock the database while generating
         # config files, then increment version before unlocking.

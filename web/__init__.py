@@ -16,6 +16,7 @@ def create_app(test_config=None):
         'ldap_user': '',
         'ldap_pass': '',
         'ldap_base_dn': '',
+        'user_group': '',
         'oidc_tenant': '',
         'oidc_client_id': '',
         'oidc_client_secret': '',
