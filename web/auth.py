@@ -10,10 +10,10 @@ auth = None
 users = {}
 
 class User(flask_login.UserMixin):
-    def __init__(self, userinfo):
-        self.username = userinfo['preferred_username']
-        self.groups = set(userinfo.get('groups', ()))
-        self.data = userinfo
+    def __init__(self, info):
+        self.username = info.get('preferred_username', '')
+        self.groups = set(info.get('groups', ()))
+        self.data = info # for debugging really
         try:
             self.is_admin = db.load('settings').get('admin_group') in self.groups
         except:
@@ -51,7 +51,7 @@ def init_app(app):
     @app.route('/auth')
     def auth():
         token = oauth.azure.authorize_access_token()
-        user = users[user.username] = User(oauth.azure.parse_id_token(token))
+        user = users[user.username] = User(token.get('userinfo', {}))
         flask_login.login_user(user)
         return flask.redirect('/')
 
