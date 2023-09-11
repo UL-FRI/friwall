@@ -46,10 +46,10 @@ def init_app(app):
 
     @app.route('/login')
     def login():
-        return oauth.azure.authorize_redirect(flask.url_for('auth', _external=True))
+        return oauth.azure.authorize_redirect(flask.url_for('authorize', _external=True))
 
-    @app.route('/auth')
-    def auth():
+    @app.route('/authorize')
+    def authorize():
         token = oauth.azure.authorize_access_token()
         user = users[user.username] = User(token.get('userinfo', {}))
         flask_login.login_user(user)
