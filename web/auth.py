@@ -26,14 +26,13 @@ class User(flask_login.UserMixin):
         return self.username
 
 def init_app(app):
-    settings = db.load('settings')
     login_manager = flask_login.LoginManager(app)
     oauth = authlib.integrations.flask_client.OAuth(app)
     oauth.register(
-        name='azure',
-        server_metadata_url=f'https://login.microsoftonline.com/{settings.get("oidc_tenant")}/v2.0/.well-known/openid-configuration',
-        client_id=settings.get('oidc_client_id'),
-        client_secret=settings.get('oidc_client_secret'),
+        name='default',
+        server_metadata_url=app.config['OIDC_URL_DISCOVERY'],
+        client_id=app.config['OIDC_CLIENT_ID'],
+        client_secret=app.config['OIDC_CLIENT_SECRET'],
         client_kwargs={'scope': 'openid profile email'})
 
     @login_manager.user_loader
@@ -46,11 +45,11 @@ def init_app(app):
 
     @app.route('/login')
     def login():
-        return oauth.azure.authorize_redirect(flask.url_for('authorize', _external=True))
+        return oauth.default.authorize_redirect(flask.url_for('authorize', _external=True))
 
     @app.route('/authorize')
     def authorize():
-        token = oauth.azure.authorize_access_token()
+        token = oauth.default.authorize_access_token()
         user = users[user.username] = User(token.get('userinfo', {}))
         flask_login.login_user(user)
         return flask.redirect('/')
@@ -59,10 +58,5 @@ def init_app(app):
     def logout():
         flask_login.logout_user()
         return flask.redirect(
-            f'https://login.microsoftonline.com/common/oauth2/v2.0/logout?'
-            + urllib.parse.urlencode(
-                {
-                    'returnTo': flask.url_for('home', _external=True),
-                    'client_id': settings.get('oidc_client_id')
-                },
-                quote_via=urllib.parse.quote_plus))
+            flask.current_app.config.get('OIDC_URL_LOGOUT') + '?'
+            + urllib.parse.urlencode({'client_id': config.get('OIDC_CLIENT_ID')}))
