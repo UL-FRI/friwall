@@ -17,8 +17,7 @@ def create_app(test_config=None):
         'ldap_pass': '',
         'ldap_base_dn': '',
         'user_group': '',
-        'oidc_url_discovery': '',
-        'oidc_url_logout': '',
+        'oidc_server': '',
         'oidc_client_id': '',
         'oidc_client_secret': '',
         'admin_group': '',
@@ -36,13 +35,9 @@ def create_app(test_config=None):
         db.write('settings', settings)
 
     app.config['SECRET_KEY'] = settings.get('secret_key', '')
-    app.config['OIDC_URL_DISCOVERY'] = settings.get('oidc_url_discovery', '')
-    app.config['OIDC_URL_LOGOUT'] = settings.get('oidc_url_logout', '')
-    app.config['OIDC_CLIENT_ID'] = settings.get('oidc_client_id', '')
-    app.config['OIDC_CLIENT_SECRET'] = settings.get('oidc_client_secret', '')
 
     from . import auth
-    auth.init_app(app)
+    auth.init_app(app, settings)
 
     from . import errors
     errors.init_app(app)

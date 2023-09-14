@@ -25,15 +25,19 @@ class User(flask_login.UserMixin):
     def get_id(self):
         return self.username
 
-def init_app(app):
+def init_app(app, settings):
     login_manager = flask_login.LoginManager(app)
     oauth = authlib.integrations.flask_client.OAuth(app)
     oauth.register(
         name='default',
-        server_metadata_url=app.config['OIDC_URL_DISCOVERY'],
-        client_id=app.config['OIDC_CLIENT_ID'],
-        client_secret=app.config['OIDC_CLIENT_SECRET'],
+        server_metadata_url=settings.get('oidc_server'),
+        client_id=settings.get('oidc_client_id'),
+        client_secret=settings.get('oidc_client_secret'),
         client_kwargs={'scope': 'openid profile email'})
+
+    metadata = oauth.default.load_server_metadata()
+    app.config['OIDC_CLIENT_ID'] = settings.get('OIDC_CLIENT_ID')
+    app.config['OIDC_END_SESSION_ENDPOINT'] = metadata.get('end_session_endpoint')
 
     @login_manager.user_loader
     def load_user(username):
@@ -57,6 +61,8 @@ def init_app(app):
     @app.route('/logout')
     def logout():
         flask_login.logout_user()
-        return flask.redirect(
-            flask.current_app.config.get('OIDC_URL_LOGOUT') + '?'
-            + urllib.parse.urlencode({'client_id': config.get('OIDC_CLIENT_ID')}))
+        if oidc_logout_url := flask.current_app.config.get('OIDC_END_SESSION_ENDPOINT'):
+            return flask.redirect(oidc_logout_url + '?'
+                + urllib.parse.urlencode({'client_id': flask.current_app.config.get('OIDC_CLIENT_ID')}))
+        else:
+            return flask.redirect('/')
