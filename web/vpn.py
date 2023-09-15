@@ -67,8 +67,9 @@ def new():
         'ip': str(ip),
         'timestamp': now,
         'name': name,
+        'dns': settings.get('wg_dns') if flask.request.json.get('use_dns', True) else False,
+        'allowed_nets': settings.get('wg_allowed_nets', []),
         'add_default': flask.request.json.get('add_default', False),
-        'use_dns': flask.request.json.get('use_dns', True),
     }
     return flask.render_template('vpn/wg-fri.conf', **args)
 

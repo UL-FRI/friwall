@@ -24,6 +24,8 @@ def create_app(test_config=None):
         'admin_mail': '',
         'wg_endpoint': '',
         'wg_port': '51820',
+        'wg_allowed_nets': '',
+        'wg_dns': False,
         'wg_key': '',
         'wg_net': '',
         'version': 0,
