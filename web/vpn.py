@@ -60,8 +60,8 @@ def new():
 
     # Template arguments.
     args = {
-        'server': f'{settings.get("wg_endpoint")}',
-        'port': f'{settings.get("wg_port", 51820)}',
+        'server': settings.get('wg_endpoint'),
+        'port': settings.get('wg_port', '51820'),
         'server_key': server_pubkey,
         'pubkey': pubkey,
         'ip': str(ip),
