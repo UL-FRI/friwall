@@ -38,22 +38,22 @@ def new():
     host = ipaddress.ip_interface(settings.get('wg_net', '10.0.0.1/24'))
     with db.locked():
         # Find a free address for the new key.
-        ips = db.read('wireguard')
+        keys = db.read('wireguard')
         for ip in host.network.hosts():
-            if ip != host.ip and str(ip) not in ips:
+            if ip != host.ip and str(ip) not in keys:
                 break
         else:
             return flask.Response('no more available IP addresses', status=500, mimetype='text/plain')
         now = datetime.datetime.utcnow()
         name = re.sub('[^\w ]', '', flask.request.json.get('name', ''))
 
-        ips[str(ip)] = {
+        keys[str(ip)] = {
             'key': pubkey,
             'time': now.timestamp(),
             'user': flask_login.current_user.get_id(),
             'name': name,
         }
-        db.write('wireguard', ips)
+        db.write('wireguard', keys)
 
     # Generate a new config archive for firewall nodes.
     system.run(system.save_config)
@@ -81,8 +81,8 @@ def delete():
 
     with db.locked():
         user = flask_login.current_user.get_id()
-        ips = {k: v for k, v in db.read('wireguard').items() if v.get('user') != user or v.get('key') != pubkey}
-        db.write('wireguard', ips)
+        keys = {k: v for k, v in db.read('wireguard').items() if v.get('user') != user or v.get('key') != pubkey}
+        db.write('wireguard', keys)
 
     system.run(system.save_config)
 
