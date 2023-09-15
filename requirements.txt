@@ -1,4 +1,4 @@
-authlib
+authlib>=1.2.1
 click
 flask
 flask-login
