@@ -1,8 +1,16 @@
 {% extends 'base.html' %}
-
 {% block content %}
+<section>
+<dl>
+<dt><a href="{{ url_for('vpn.index') }}">VPN</a>
+<dd>urejanje ključev za WireGuard VPN
+<dt><a href="{{ url_for('rules.manage') }}">Pravila</a>
+<dd>vklop / izklop pravil za požarni zid
+</dl>
+</section>
 {% if current_user.is_admin %}
 <section>
+<h1>Admin</h1>
 <dl>
 <dt><a href="{{ url_for('nodes') }}">Status</a>
 <dd>status opek v požarnem zidu
@@ -20,14 +28,5 @@
 <dd>preslikave uporabnikov LDAP v pisarniška omrežja
 </dl>
 </section>
-
 {% endif %}
-<section>
-<dl>
-<dt><a href="{{ url_for('vpn.index') }}">VPN</a>
-<dd>urejanje ključev za WireGuard VPN
-<dt><a href="{{ url_for('rules.manage') }}">Pravila</a>
-<dd>vklop / izklop pravil za požarni zid
-</dl>
-</section>
 {% endblock %}

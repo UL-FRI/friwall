@@ -3,6 +3,8 @@
 {% block content %}
 <p>
 Trenutna različica nastavitev: {{ version }}
+<p>
+Na opekah veljajo različice:
 <ul>
 {% for node, node_version in nodes.items() %}
 <li>{{ node }}: <span style="color: {% if node_version|string == version|string %}green{% else %}red{% endif %};">{{ node_version }}</span>
