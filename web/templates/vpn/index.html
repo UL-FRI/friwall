@@ -30,14 +30,15 @@ Nastavitve shranite (kot skrbnik) v <code>/etc/wireguard/wg-fri.conf</code>. VPN
 Vnesite poljubno oznako in kliknite <em>Ustvari ključ</em>. Če vklopite prvo opcijo, bo vaš računalnik čez VPN usmeril ves mrežni promet, ne le tistega, ki je namenjen strežnikom na FRI. Če izklopite drugo opcijo, bodo nekatere storitve dostopne le prek naslova IP. Če ste v dvomih, pustite privzete nastavitve.
 
 <p>
-<input id="name" name="name" pattern="[\w ]*" maxlength="16" placeholder="Ime naprave" />
-<br>
+<label for="name">Ime naprave</label><br>
+<input id="name" name="name" pattern="[.-_A-Za-z0-9 ]*" maxlength="16" placeholder="A-Z a-z 0-9 . _ - " />
+<p>
 <input type="checkbox" id="add_default" name="add_default" />
 <label for="add_default">Uporabi VPN za ves promet</label>
 <br>
 <input type="checkbox" id="use_dns" name="use_dns" checked />
 <label for="use_dns">Uporabi imenske strežnike FRI</label>
-<br>
+<p>
 <button id="submit" type="submit">Ustvari ključ</button>
 </form>
 
