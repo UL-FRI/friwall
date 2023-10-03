@@ -43,6 +43,19 @@ def run(fun, args=()):
             fun(*args)
     multiprocessing.Process(target=task).start()
 
+# For a network named 'xyzzy-foo', return xyzzy. Used for creating
+# ipsets for office-* and server-* networks.
+def network_group(name):
+    match name.split('-'):
+        case group, _:
+            return group
+        case _:
+            return None
+
+def ipset_add(ipsets, name, ip=None, ip6=None):
+    ipsets[name].update(ip or ())
+    ipsets[f'{name}/6'].update(ip6 or ())
+
 def save_config():
     output = None
     try:
@@ -76,18 +89,24 @@ def save_config():
 
             # Populate IP sets.
             ipsets = collections.defaultdict(set)
+            for name, network in db.read('networks').items():
+                if group := network_group(name):
+                    ipset_add(ipsets, group, network.get('ip'), network.get('ip6'))
+                ipset_add(ipsets, name, network.get('ip'), network.get('ip6'))
+
             for name, network in db.read('ipsets').items():
-                ipsets[name].update(network.get('ip', ()))
-                ipsets[f'{name}/6'].update(network.get('ip6', ()))
+                ipset_add(ipsets, name, network.get('ip'), network.get('ip6'))
 
             # Add registered VPN addresses for each network based on
             # LDAP group membership.
             wireguard = db.read('wireguard')
             for ip, key in wireguard.items():
+                ip4 = [f'{ip}/32']
+                ip6 = [f'{key["ip6"]}/128'] if 'ip6' in key else None
                 for network in user_networks.get(key.get('user', ''), ()):
-                    ipsets[network].add(f'{ip}/32')
-                    if 'ip6' in key:
-                        ipsets[f'{network}/6'].add(f'{key["ip6"]}/128')
+                    if group := network_group(network):
+                        ipset_add(ipsets, group, ip4, ip6)
+                    ipset_add(ipsets, network, ip4, ip6)
 
             # Create config files.
             output = pathlib.Path.home() / 'config' / f'{version}'
