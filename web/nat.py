@@ -13,13 +13,13 @@ def index():
         return flask.Response('forbidden', status=403, mimetype='text/plain')
 
     with db.locked():
-        nat = { office: "" for office in db.read('networks') }
+        nat = { network: "" for network in db.read('networks') }
         nat |= db.read('nat')
         if flask.request.method == 'POST':
             form = flask.request.form
-            for office, address in form.items():
-                if office in nat:
-                    nat[office] = address
+            for network, address in form.items():
+                if network in nat:
+                    nat[network] = address
             db.write('nat', nat)
             system.run(system.save_config)
             return flask.redirect(flask.url_for('nat.index'))
