@@ -48,19 +48,19 @@ def create_app(test_config=None):
     system.init_app(app)
 
     from . import config
-    app.register_blueprint(config.blueprint)
+    app.register_blueprint(config.blueprint, url_prefix='/config')
 
     from . import ipsets
-    app.register_blueprint(ipsets.blueprint)
+    app.register_blueprint(ipsets.blueprint, url_prefix='/ipsets')
 
     from . import nat
-    app.register_blueprint(nat.blueprint)
+    app.register_blueprint(nat.blueprint, url_prefix='/nat')
 
     from . import rules
-    app.register_blueprint(rules.blueprint)
+    app.register_blueprint(rules.blueprint, url_prefix='/rules')
 
     from . import vpn
-    app.register_blueprint(vpn.blueprint)
+    app.register_blueprint(vpn.blueprint, url_prefix='/vpn')
 
     @app.route('/')
     @flask_login.login_required

@@ -10,7 +10,7 @@ import flask_login
 from . import db
 from . import system
 
-blueprint = flask.Blueprint('vpn', __name__, url_prefix='/vpn')
+blueprint = flask.Blueprint('vpn', __name__)
 wgkey_regex = re.compile(r'^[A-Za-z0-9/+=]{44}$')
 
 @blueprint.route('/')

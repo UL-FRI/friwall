@@ -6,7 +6,7 @@ import flask_login
 from . import db
 from . import system
 
-blueprint = flask.Blueprint('ipsets', __name__, url_prefix='/ipsets')
+blueprint = flask.Blueprint('ipsets', __name__)
 
 @blueprint.route('/', methods=('GET', 'POST'))
 @flask_login.login_required

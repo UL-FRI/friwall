@@ -4,7 +4,7 @@ import flask_login
 from . import db
 from . import system
 
-blueprint = flask.Blueprint('rules', __name__, url_prefix='/rules')
+blueprint = flask.Blueprint('rules', __name__)
 
 @blueprint.route('/', methods=('GET', 'POST'))
 @flask_login.login_required
