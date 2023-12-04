@@ -102,7 +102,7 @@ def save_config():
             wireguard = db.read('wireguard')
             for ip, key in wireguard.items():
                 ip4 = [f'{ip}/32']
-                ip6 = [f'{key["ip6"]}/128'] if 'ip6' in key else None
+                ip6 = [f'{key["ip6"]}/128'] if key.get('ip6') else None
                 for network in user_networks.get(key.get('user', ''), ()):
                     if group := network_group(network):
                         ipset_add(ipsets, group, ip4, ip6)
@@ -174,6 +174,8 @@ PrivateKey = {settings.get('wg_key')}
 PublicKey = {data.get('key')}
 AllowedIPs = {ip}
 ''', file=f)
+                    if 'ip6' in data:
+                        print(f'AllowedIPs = {data["ip6"]}', file=f)
 
             # Make a config archive in a temporary place, so we don’t send
             # incomplete tars.

@@ -39,8 +39,11 @@ def new():
     with db.locked():
         # Find a free address for the new key.
         keys = db.read('wireguard')
-        for ip in host.network.hosts():
+        ip6 = None
+        for index, ip in enumerate(host.network.hosts(), start=1):
             if ip != host.ip and str(ip) not in keys:
+                if wg_net6 := settings.get('wg_net6'):
+                    ip6 = (ipaddress.ip_interface(wg_net6) + index).ip
                 break
         else:
             return flask.Response('no more available IP addresses', status=500, mimetype='text/plain')
@@ -49,6 +52,7 @@ def new():
 
         keys[str(ip)] = {
             'key': pubkey,
+            'ip6': str(ip6) if ip6 else None,
             'time': now.timestamp(),
             'user': flask_login.current_user.get_id(),
             'name': name,
@@ -65,6 +69,7 @@ def new():
         'server_key': server_pubkey,
         'pubkey': pubkey,
         'ip': str(ip),
+        'ip6': str(ip6) if ip6 else None,
         'timestamp': now,
         'name': name,
         'dns': settings.get('wg_dns') if flask.request.json.get('use_dns', True) else False,

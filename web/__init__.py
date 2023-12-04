@@ -28,6 +28,7 @@ def create_app(test_config=None):
         'wg_dns': False,
         'wg_key': '',
         'wg_net': '',
+        'wg_net6': '',
         'version': 0,
     }
 
