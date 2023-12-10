@@ -111,13 +111,12 @@ function fetch_keys() {
             });
             var li = document.createElement('li');
             li.innerHTML = ' ' + (new Date(key.time*1000).toISOString().split('T')[0]) +
-		' <code>' + key.key + '</code>' +
-                (key.active ? '<font color="red"><sup>★</sup></font> ' : ' ') +
-                key.name;
+		' <code>' + key.key + '</code> ' + key.name +
+                (key.active ? '<font color="red"><sup>★</sup></font> ' : '');
             li.prepend(a);
             keys.appendChild(li);
             if (key.active)
-                warning.innerHTML = '<font color="red"><sup>★</sup></font>Ta ključ uporablja aktivna povezava. Če ga odstranite, bo prekinjena.';
+                warning.innerHTML = '<font color="red"><sup>★</sup></font> Ta ključ uporablja trenutna povezava. Če ga odstranite, bo prekinjena.';
         }
         document.querySelector('section.keys').style.display = (Object.keys(data).length ? 'unset' : 'none');
     })

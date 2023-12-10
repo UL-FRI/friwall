@@ -22,7 +22,9 @@ def index():
 @flask_login.login_required
 def list():
     user = flask_login.current_user.get_id()
-    return flask.jsonify({k: v for k, v in db.load('wireguard').items() if v.get('user') == user})
+    return flask.jsonify(
+        {k: v | {'active': flask.request.remote_addr in (v.get('ip'), v.get('ip6'))}
+         for k, v in db.load('wireguard').items() if v.get('user') == user})
 
 @blueprint.route('/new', methods=('POST',))
 @flask_login.login_required
