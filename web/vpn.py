@@ -29,6 +29,19 @@ def list():
 @blueprint.route('/new', methods=('POST',))
 @flask_login.login_required
 def new():
+    # Each key is associated with a new IPv4 address from the pool settings['wg_net'].
+    # Each key gets an IPv6 subnet depending on the amount of surplus addresses available.
+    # For wg_net 10.10.0.0/18 and wg_net6 1234:5678:90ab:cdef::/64,
+    # the key for 10.10.0.10/32 would get 1234:5678:90ab:cdef:a::/80.
+    def ipv4to6(net4, ip4, net6):
+        # Calculate the address and prefix length for the assigned IPv6 network.
+        len4 = (net4.max_prefixlen - net4.prefixlen)
+        len6 = (net6.max_prefixlen - net6.prefixlen)
+        # Make sure the network address ends at a colon. Wastes some addresses but IPv6.
+        assigned = (len6 - len4) - (len6 - len4) % 16
+        ip6 = (net6.network_address + (index<<assigned)).compressed
+        return ip6 + '/' + str(net6.max_prefixlen - assigned)
+
     pubkey = flask.request.json.get('pubkey', '')
     if not re.match(wgkey_regex, pubkey):
         return flask.Response('invalid key', status=400, mimetype='text/plain')
@@ -38,14 +51,14 @@ def new():
             text=True, capture_output=True, shell=True).stdout.strip()
 
     host = ipaddress.ip_interface(settings.get('wg_net', '10.0.0.1/24'))
+    ip6 = None
     with db.locked():
         # Find a free address for the new key.
         keys = db.read('wireguard')
-        ip6 = None
         for index, ip in enumerate(host.network.hosts(), start=1):
             if ip != host.ip and str(ip) not in keys:
                 if wg_net6 := settings.get('wg_net6'):
-                    ip6 = (ipaddress.ip_interface(wg_net6) + index).ip
+                    ip6 = ipv4to6(host.network, ip, ipaddress.ip_interface(wg_net6).network)
                 break
         else:
             return flask.Response('no more available IP addresses', status=500, mimetype='text/plain')

@@ -108,7 +108,7 @@ def save_config():
             wireguard = db.read('wireguard')
             for ip, key in wireguard.items():
                 ip4 = [f'{ip}/32']
-                ip6 = [f'{key["ip6"]}/128'] if key.get('ip6') else None
+                ip6 = [f'{key["ip6"]}'] if key.get('ip6') else None
                 for network in user_networks.get(key.get('user', ''), ()):
                     if group := network_group(network):
                         ipset_add(ipsets, group, ip4, ip6)
