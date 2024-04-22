@@ -68,10 +68,18 @@ def save_config():
         user_networks = collections.defaultdict(set)
         ldap = ldap3.Connection(ldap3.Server(settings.get('ldap_host'), use_ssl=True),
                 settings.get('ldap_user'), settings.get('ldap_pass'), auto_bind=True)
+
+        # All of these must match to consider an LDAP object.
+        ldap_query = [
+            '(objectClass=user)', # only users
+            '(objectCategory=person)', # that are people
+            '(!(userAccountControl:1.2.840.113556.1.4.803:=2))', # with enabled accounts
+        ]
+        if group := settings.get('user_group'):
+            ldap_query += [f'(memberOf:1.2.840.113556.1.4.1941:={group})'] # in given group, recursively
+
         ldap.search(settings.get('ldap_base_dn', ''),
-                    '(&(objectClass=user)(objectCategory=person)' + # only people
-                    '(!(userAccountControl:1.2.840.113556.1.4.803:=2))' + # with enabled accounts
-                    f'(memberOf:1.2.840.113556.1.4.1941:={settings.get("user_group", "")}))', # in given group, recursively
+                    f'(&{"".join(ldap_query)})', # conjuction (&(…)(…)(…)) of queries
                     attributes=['userPrincipalName', 'memberOf'])
         for entry in ldap.entries:
             for group in entry.memberOf:
