@@ -19,7 +19,10 @@ Zaženite WireGuard, izberite <em>Scan from QR code</em> in skenirajte kodo, pri
 <details>
 <summary>Linux / BSD</summary>
 <p>
-Nastavitve shranite (kot skrbnik) v <code>/etc/wireguard/wg-fri.conf</code>. VPN nato (de)aktivirate s <code>sudo wg-quick up wg-fri</code> oz. <code>sudo wg-quick down wg-fri</code>. Povezavo lahko uvozite tudi v <a href="https://www.xmodulo.com/wireguard-vpn-network-manager-gui.html">NetworkManager</a> ali podobno.
+Nastavitve shranite (kot skrbnik) v <code>/etc/wireguard/wg-fri.conf</code>. VPN nato (de)aktivirate s <code>sudo wg-quick up wg-fri</code> oz. <code>sudo wg-quick down wg-fri</code>.
+
+<p>
+Povezavo lahko uvozite tudi v NetworkManager z ukazom <code>nmcli connection import type wireguard file wg-fri.conf</code>.
 </details>
 
 <section id="new-key">
@@ -27,20 +30,22 @@ Nastavitve shranite (kot skrbnik) v <code>/etc/wireguard/wg-fri.conf</code>. VPN
 
 <form id="request">
 <p>
-Vnesite poljubno oznako in kliknite <em>Ustvari ključ</em>. Če vklopite prvo opcijo, bo vaš računalnik čez VPN usmeril ves mrežni promet, ne le tistega, ki je namenjen strežnikom na FRI. Če izklopite drugo opcijo, bodo nekatere storitve dostopne le prek naslova IP. Če ste v dvomih, pustite privzete nastavitve.
+Za vsako napravo, ki jo želite povezati v omrežje FRI, ustvarite nov ključ.
 
 <p>
 <label for="name">Ime naprave</label><br>
 <input id="name" name="name" pattern="[.-_A-Za-z0-9 ]*" maxlength="16" placeholder="A-Z a-z 0-9 . _ - " />
+<button id="submit" type="submit">Ustvari ključ</button>
 <p>
 <input type="checkbox" id="add_default" name="add_default" />
 <label for="add_default">Uporabi VPN za ves promet</label>
 <br>
 <input type="checkbox" id="use_dns" name="use_dns" checked />
 <label for="use_dns">Uporabi imenske strežnike FRI</label>
-<p>
-<button id="submit" type="submit">Ustvari ključ</button>
 </form>
+
+<p>
+Privzete nastavitve čez VPN usmerijo le promet, namenjen strežnikom na FRI in UL. Če vklopite prvo opcijo, bo vaš računalnik čez VPN usmeril ves promet. Če izklopite drugo opcijo, bodo nekateri strežniki dostopni le prek naslova IP. Če ste v dvomih, pustite privzete nastavitve. Podrobnejše informacije so v <a href="https://doku.fri.uni-lj.si/vpn#nastavitve">dokumentaciji</a>.
 
 <section id="settings" style="display: none;">
 <p>
@@ -59,7 +64,7 @@ V nastavitvah lahko dodate ali odstranite vnose <code>AllowedIPs</code>. Ti dolo
 <section class="keys" style="display: none;">
 <h1>Obstoječi ključi</h1>
 <p>
-Za vsako napravo ustvarite nov ključ. Ključe, ki jih ne uporabljate, lahko tukaj odstranite. Trenutno so registrirani ključi:
+Ključe, ki jih ne uporabljate, lahko tukaj odstranite. Trenutno so registrirani ključi:
 <ul class="keys" style="list-style: none;"></ul>
 <p class="keys" id="active-key-warning" style="margin-top: 0;">
 </section>
