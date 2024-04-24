@@ -2,18 +2,24 @@
 
 {% block content %}
 <p>
-Za oddeljano povezavo v omrežje FRI namestite <a href="https://www.wireguard.com/install/">WireGuard</a>, ustvarite ključ in sledite napotkom za posamezni sistem.
+Za VPN oziroma oddeljano povezavo v omrežje FRI uporabljamo <a href="https://wireguard.com">WireGuard</a>. Več informacij o uporabi in nastavitvah VPN najdete v <a href="https://doku.fri.uni-lj.si/vpn">dokumentaciji</a>.
+
+<p>
+Za priklop v omrežje spodaj ustvarite nov ključ in prenesite izpisano datoteko. Nato sledite napotkom za posamezni sistem.
 
 <details>
 <summary>Windows / Mac</summary>
 <p>
-Zaženite WireGuard, kliknite <em>Import tunnel(s) from file</em> in izberite preneseno datoteko z nastavitvami. VPN nato (de)aktivirate s klikom na gumb <em>(De)activate</em>.
+Namestite in zaženite WireGuard za <a href="https://download.wireguard.com/windows-client/wireguard-installer.exe">Windows</a> ali <a href="https://itunes.apple.com/us/app/wireguard/id1451685025?ls=1&mt=12">Mac</a>. Kliknite <em>Import tunnel(s) from file</em> in izberite preneseno datoteko z nastavitvami <code>wg-fri.conf</code>. VPN nato aktivirate oziroma deaktivirate s klikom na gumb <em>(De)activate</em>.
 </details>
 
 <details>
 <summary>Android / iOS</summary>
 <p>
-Zaženite WireGuard, izberite <em>Scan from QR code</em> in skenirajte kodo, prikazano ob izdelavi novega ključa.
+Namestite WireGuard za <a href="https://play.google.com/store/apps/details?id=com.wireguard.android">Android</a> ali <a href="https://itunes.apple.com/us/app/wireguard/id1441195209?ls=1&mt=8">iOS</a>. Zaženite WireGuard, dodajte novo povezavo z <em>Import from file</em> in izberite preneseno datoteko z nastavitvami.
+
+<p>
+Ključ lahko ustvarite tudi na računalniku in ga v telefon dodate s <em>Scan from QR code</em> s kodo, prikazano ob novem ključu.
 </details>
 
 <details>
@@ -30,7 +36,7 @@ Povezavo lahko uvozite tudi v NetworkManager z ukazom <code>nmcli connection imp
 
 <form id="request">
 <p>
-Za vsako napravo, ki jo želite povezati v omrežje FRI, ustvarite nov ključ.
+Na vsaki napravi, ki jo želite povezati v omrežje FRI, ustvarite nov ključ. Privzete nastavitve usmerijo čez VPN le promet, namenjen strežnikom na FRI in UL.
 
 <p>
 <label for="name">Ime naprave</label><br>
@@ -45,7 +51,7 @@ Za vsako napravo, ki jo želite povezati v omrežje FRI, ustvarite nov ključ.
 </form>
 
 <p>
-Privzete nastavitve čez VPN usmerijo le promet, namenjen strežnikom na FRI in UL. Če vklopite prvo opcijo, bo vaš računalnik čez VPN usmeril ves promet. Če izklopite drugo opcijo, bodo nekateri strežniki dostopni le prek naslova IP. Če ste v dvomih, pustite privzete nastavitve. Podrobnejše informacije so v <a href="https://doku.fri.uni-lj.si/vpn#nastavitve">dokumentaciji</a>.
+Če vklopite prvo opcijo, bo vaš računalnik čez VPN usmerjal ves promet. Če izklopite drugo opcijo, bodo nekateri strežniki dostopni le prek naslova IP. Če ste v dvomih, pustite privzete nastavitve.
 
 <section id="settings" style="display: none;">
 <p>
