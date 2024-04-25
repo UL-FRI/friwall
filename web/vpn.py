@@ -63,7 +63,7 @@ def new():
         else:
             return flask.Response('no more available IP addresses', status=500, mimetype='text/plain')
         now = datetime.datetime.utcnow()
-        name = re.sub('[^\w ]', '', flask.request.json.get('name', ''))
+        name = re.sub('[^-._A-Za-z0-9]', '', flask.request.json.get('name', ''))
 
         keys[str(ip)] = {
             'key': pubkey,
