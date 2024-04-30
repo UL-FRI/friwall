@@ -90,7 +90,7 @@ def save_config():
         # config files, then increment version before unlocking.
         with db.locked():
             settings = db.read('settings')
-            version = settings['version'] = int(settings.get('version', 0)) + 1
+            version = settings['version'] = int(settings.get('version') or '0') + 1
 
             # Populate IP sets.
             ipsets = collections.defaultdict(set)
@@ -155,7 +155,7 @@ def save_config():
             # Print wireguard config.
             with open(output / 'etc/wireguard/wg.conf', 'w', encoding='utf-8') as f:
                 f.write(wg_intf.format(
-                    port=settings.get('wg_port', 51820),
+                    port=settings.get('wg_port') or 51820,
                     key=settings.get('wg_key')))
                 for ip, data in wireguard.items():
                     f.write(wg_peer.format(

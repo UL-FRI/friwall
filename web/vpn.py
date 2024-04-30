@@ -50,7 +50,7 @@ def new():
     server_pubkey = subprocess.run([f'wg pubkey'], input=settings.get('wg_key'),
             text=True, capture_output=True, shell=True).stdout.strip()
 
-    host = ipaddress.ip_interface(settings.get('wg_net', '10.0.0.1/24'))
+    host = ipaddress.ip_interface(settings.get('wg_net') or '10.0.0.1/24')
     ip6 = None
     with db.locked():
         # Find a free address for the new key.
@@ -80,7 +80,7 @@ def new():
     # Template arguments.
     args = {
         'server': settings.get('wg_endpoint'),
-        'port': settings.get('wg_port', '51820'),
+        'port': settings.get('wg_port') or '51820',
         'server_key': server_pubkey,
         'pubkey': pubkey,
         'ip': str(ip),
@@ -88,7 +88,7 @@ def new():
         'timestamp': now,
         'name': name,
         'dns': settings.get('wg_dns') if flask.request.json.get('use_dns', True) else False,
-        'allowed_nets': settings.get('wg_allowed_nets', []),
+        'allowed_nets': settings.get('wg_allowed_nets', ''),
         'add_default': flask.request.json.get('add_default', False),
     }
     return flask.render_template('vpn/wg-fri.conf', **args)
