@@ -1,25 +1,38 @@
 {% extends 'base.html' %}
+{% block header %}
+<style>
+td > input {
+    width: 100%;
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <p>
-Urejate območja IP. Za vsako območje lahko dodate enega ali več obsegov IP in/ali IPv6, ločenih s presledki.
+Urejate naslovna območja. Za statična omrežja lahko določimo naslov NAT in skupino za VPN. Za lastna območja lahko poleg tega definiramo enega ali več obsegov IP, ločenih s presledki.
+
+<p>
+NAT se izvaja na območjih, kjer je nastavljen. Uporabniki VPN imajo glede na skupine v AD enake dostope kot območja, za katera so nastavljene te skupine.
 
 <form id="request" method="POST">
-<table>
+<table style="width: 100%;">
 <thead>
-<th>Ime<th>IP<th>IPv6
+<th>Ime<th>IP<th>IPv6<th>NAT<th>VPN
 <tbody>
-<tbody>
-{% for name, addresses in ipsets.items() %}
+{% for name, data in ipsets.items() %}
 <tr>
-<td><input name="name" value="{{ name }}" />
-<td><input name="ip" value="{{ addresses.ip|join(' ') }}" />
-<td><input name="ip6" value="{{ addresses.ip6|join(' ') }}" />
+<td style="max-width: 4em;"><input name="name" value="{{ name }}" {% if not data.custom %}readonly{% endif %} />
+<td style="max-width: 5em;"><input name="ip" value="{{ data.ip|join(' ') }}" {% if not data.custom %}readonly{% endif %} />
+<td style="max-width: 8em;"><input name="ip6" value="{{ data.ip6|join(' ') }}" {% if not data.custom %}readonly{% endif %} />
+<td style="max-width: 5em;"><input name="nat" value="{{ data.nat }}" />
+<td style=""><input name="vpn" value="{{ data.vpn }}" />
 {% endfor %}
 <tr>
-<td><input name="name" />
-<td><input name="ip" />
-<td><input name="ip6" />
+<td style="max-width: 4em;"><input name="name" />
+<td style="max-width: 5em;"><input name="ip" />
+<td style="max-width: 8em;"><input name="ip6" />
+<td style="max-width: 5em;"><input name="nat" />
+<td><input name="vpn" />
 </table>
 <p><button id="submit" type="submit">Shrani</button>
 </form>

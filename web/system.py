@@ -19,6 +19,10 @@ import ldap3
 
 from . import db
 
+def init_app(app):
+    app.cli.add_command(generate)
+    app.cli.add_command(push)
+
 def mail(rcpt, subject, body):
     try:
         msg = email.message.EmailMessage()
@@ -31,10 +35,6 @@ def mail(rcpt, subject, body):
     except Exception as e:
         syslog.syslog(f'error sending mail: {e}')
 
-def init_app(app):
-    app.cli.add_command(generate)
-    app.cli.add_command(push)
-
 def run(fun, args=()):
     def task():
         if os.fork() == 0:
@@ -42,73 +42,52 @@ def run(fun, args=()):
             fun(*args)
     multiprocessing.Process(target=task).start()
 
-def ipset_add(ipsets, name, ip=None, ip6=None):
-    ipsets[name].update(ip or ())
-    ipsets[f'{name}/6'].update(ip6 or ())
-
+# Generate configuration files and create a config tarball.
 def save_config():
-    # Format strings for creating firewall config files.
-    nft_set = 'set {name} {{\n    type ipv{family}_addr; flags interval; {elements}\n}}\n\n'
-    nft_map = 'map {name} {{\n    type ipv4_addr : interval ipv4_addr; flags interval; {elements}\n}}\n\n'
-    nft_forward = '# {index}. {name}\n{text}\n\n'
-    wg_intf = '[Interface]\nListenPort = {port}\nPrivateKey = {key}\n\n'
-    wg_peer = '# {user}\n[Peer]\nPublicKey = {key}\nAllowedIPs = {ips}\n\n'
-
     output = None
     try:
-        # Just load the settings here but keep the database unlocked
+        # Just load required settings here but keep the database unlocked
         # while we load group memberships from LDAP.
         with db.locked():
+            ipsets = db.read('ipsets')
             settings = db.read('settings')
-            groups = db.read('groups')
 
-        # For each user build a list of networks they have access to, based on
-        # group membership in AD. Only query groups associated with at least one
-        # network, and query each group only once.
-        user_networks = collections.defaultdict(set)
-        ldap = ldap3.Connection(ldap3.Server(settings.get('ldap_host'), use_ssl=True),
-                settings.get('ldap_user'), settings.get('ldap_pass'), auto_bind=True)
-
-        # All of these must match to consider an LDAP object.
-        ldap_query = [
+        # Build LDAP query for users and groups.
+        filters = [
             '(objectClass=user)', # only users
             '(objectCategory=person)', # that are people
             '(!(userAccountControl:1.2.840.113556.1.4.803:=2))', # with enabled accounts
         ]
         if group := settings.get('user_group'):
-            ldap_query += [f'(memberOf:1.2.840.113556.1.4.1941:={group})'] # in given group, recursively
+            filters += [f'(memberOf:1.2.840.113556.1.4.1941:={group})'] # in given group, recursively
 
+        # Run query and store group membership data.
+        server = ldap3.Server(settings['ldap_host'], use_ssl=True)
+        ldap = ldap3.Connection(server, settings['ldap_user'], settings['ldap_pass'], auto_bind=True)
         ldap.search(settings.get('ldap_base_dn', ''),
-                    f'(&{"".join(ldap_query)})', # conjuction (&(…)(…)(…)) of queries
-                    attributes=['userPrincipalName', 'memberOf'])
-        for entry in ldap.entries:
-            for group in entry.memberOf:
-                if group in groups:
-                    user_networks[entry.userPrincipalName.value].add(groups[group])
+                f'(&{"".join(filters)})', # conjuction (&(…)(…)(…)) of queries
+                attributes=['userPrincipalName', 'memberOf'])
+        user_groups = { e.userPrincipalName.value: set(e.memberOf) for e in ldap.entries }
 
-        # Now read the settings again and lock the database while generating
-        # config files, then increment version before unlocking.
+        # Now read the settings again while keeping the database locked until
+        # config files are generated, and increment version before unlocking.
         with db.locked():
+            ipsets = db.read('ipsets')
+            wireguard = db.read('wireguard')
             settings = db.read('settings')
             version = settings['version'] = int(settings.get('version') or '0') + 1
 
-            # Populate IP sets.
-            ipsets = collections.defaultdict(set)
-            # Sets corresponding to VLANs in NetBox. Prefixes for these sets are configured on firewall nodes with ansible.
-            for name, network in db.read('networks').items():
-                ipset_add(ipsets, name)
-            # Sets defined by user in friwall app.
-            for name, network in db.read('ipsets').items():
-                ipset_add(ipsets, name, network.get('ip'), network.get('ip6'))
-
-            # Add registered VPN addresses for each network based on
-            # LDAP group membership.
-            wireguard = db.read('wireguard')
+            # Update IP sets with VPN addresses based on AD group membership.
+            vpn_groups = set([e['vpn'] for e in ipsets.values() if e.get('vpn')])
+            group_networks = {
+                group: [name for name, data in ipsets.items() if data['vpn'] == group] for group in vpn_groups
+            }
             for ip, key in wireguard.items():
-                ip4 = [f'{ip}/32']
-                ip6 = [f'{key["ip6"]}'] if key.get('ip6') else None
-                for network in user_networks.get(key.get('user', ''), ()):
-                    ipset_add(ipsets, network, ip4, ip6)
+                for group in user_groups.get(key.get('user', ''), ()):
+                    for network in group_networks.get(group, ()):
+                        ipsets[network]['ip'].append(f'{ip}/32')
+                        if ip6 := key.get('ip6'):
+                            ipsets[network]['ip6'].append(ip6)
 
             # Create config files.
             output = pathlib.Path.home() / 'config' / f'{version}'
@@ -122,51 +101,69 @@ def save_config():
 
             # Print nftables sets.
             with open(output / 'etc/nftables.d/sets.nft', 'w', encoding='utf-8') as f:
-                for name, ips in ipsets.items():
-                    f.write(nft_set.format(
-                        name=name,
-                        family='6' if name.endswith('/6') else '4',
-                        elements=f'{"" if ips else "# "}elements = {{ {", ".join(ips)} }}'))
+                nft_set = 'set {name} {{\n    type ipv4_addr; flags interval; {ips}\n}}\n'
+                nft_set6 = 'set {name}/6 {{\n    type ipv6_addr; flags interval; {ips}\n}}\n'
+                def make_set(ips):
+                    # return "elements = { ip1, ip2, … }", prefixed with "# " if no ips
+                    return f'{"" if ips else "# "}elements = {{ {", ".join(ips)} }}'
+                for name, data in ipsets.items():
+                    f.write(nft_set.format(name=name, ips=make_set(data.get('ip', ()))))
+                    f.write(nft_set6.format(name=name, ips=make_set(data.get('ip6', ()))))
+                    f.write('\n')
 
             # Print static NAT (1:1) rules.
             with open(output / 'etc/nftables.d/netmap.nft', 'w', encoding='utf-8') as f:
-                netmap = db.read('netmap') # { private range: public range… }
-                if netmap:
-                    f.write(nft_map.format(
-                        name='netmap-out',
-                        elements='elements = {' + ',\n'.join(f'{a}: {b}' for a, b in netmap.items()) + '}'))
-                    f.write(nft_map.format(
-                        name='netmap-in',
-                        elements='elements = {' + ',\n'.join(f'{b}: {a}' for a, b in netmap.items()) + '}'))
+                nft_map = 'map {name} {{\n    type ipv4_addr : interval ipv4_addr; flags interval; elements = {{\n{ips}\n    }}\n}}\n'
+                def make_map(ips, reverse=False):
+                    # return "{ from1: to1, from2: to2, … }" with possibly reversed from and to
+                    return ',\n'.join(f"{b if reverse else a}: {a if reverse else b}" for a, b in ips)
+                if netmap := db.read('netmap'): # { private range: public range… }
+                    f.write(nft_map.format(name='netmap-out', ips=make_map(netmap.items())))
+                    f.write('\n')
+                    f.write(nft_map.format(name='netmap-in', ips=make_map(netmap.items(), reverse=True)))
 
             # Print dynamic NAT rules.
             with open(output / 'etc/nftables.d/nat.nft', 'w', encoding='utf-8') as f:
-                nat = db.read('nat') # { network name: public range… }
-                for network, address in nat.items():
-                    if address:
-                        f.write(f'iif @inside oif @outside ip saddr @{network} snat to {address}\n')
+                nft_nat = 'iif @inside oif @outside ip saddr @{name} snat to {nat}\n'
+                for name, data in ipsets.items():
+                    if nat := data.get('nat'):
+                        f.write(nft_nat.format(name=name, nat=nat))
 
             # Print forwarding rules.
             with open(output / 'etc/nftables.d/forward.nft', 'w', encoding='utf-8') as f:
+                # Forwarding rules for VPN users.
+                if vpn_networks := sorted(name for name, data in ipsets.items() if data.get('vpn')):
+                    nft_forward = 'iif @inside oif @inside ip saddr @{name} ip daddr @{name} accept\n'
+                    f.write('# forward from the VPN interface to physical networks and back\n')
+                    for name in vpn_networks:
+                        f.write(nft_forward.format(name=name))
+                    for name in vpn_networks:
+                        f.write(nft_forward.format(name=f'{name}/6'))
+                    f.write('\n')
+
+                # Custom forwarding rules.
+                nft_rule = '# {index}. {name}\n{text}\n\n'
                 for index, rule in enumerate(db.read('rules')):
                     if rule.get('enabled') and rule.get('text'):
-                        f.write(nft_forward.format(index=index, name=rule.get('name', ''), text=rule['text']))
+                        f.write(nft_rule.format(index=index, name=rule.get('name', ''), text=rule['text']))
 
             # Print wireguard config.
             with open(output / 'etc/wireguard/wg.conf', 'w', encoding='utf-8') as f:
-                f.write(wg_intf.format(
-                    port=settings.get('wg_port') or 51820,
-                    key=settings.get('wg_key')))
+                # Server configuration.
+                wg_intf = '[Interface]\nListenPort = {port}\nPrivateKey = {key}\n\n'
+                f.write(wg_intf.format(port=settings.get('wg_port') or 51820, key=settings.get('wg_key')))
+
+                # Client configuration.
+                wg_peer = '# {user}\n[Peer]\nPublicKey = {key}\nAllowedIPs = {ips}\n\n'
                 for ip, data in wireguard.items():
                     f.write(wg_peer.format(
                         user=data.get('user'),
                         key=data.get('key'),
                         ips=', '.join(filter(None, [ip, data.get('ip6')]))))
 
-            # Make a config archive in a temporary place, so we don’t send incomplete tars.
+            # Make a temporary config archive and move it to the final location,
+            # so we avoid sending incomplete tars.
             tar_file = shutil.make_archive(f'{output}-tmp', 'gztar', root_dir=output, owner='root', group='root')
-
-            # Move config archive to the final destination.
             os.rename(tar_file, f'{output}.tar.gz')
 
             # If we get here, write settings with the new version.

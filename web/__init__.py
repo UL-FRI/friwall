@@ -54,9 +54,6 @@ def create_app(test_config=None):
     from . import ipsets
     app.register_blueprint(ipsets.blueprint, url_prefix='/ipsets')
 
-    from . import nat
-    app.register_blueprint(nat.blueprint, url_prefix='/nat')
-
     from . import rules
     app.register_blueprint(rules.blueprint, url_prefix='/rules')
 

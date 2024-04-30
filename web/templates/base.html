@@ -27,6 +27,9 @@ h1 > a {
     color: unset;
     text-decoration: none;
 }
+input:read-only {
+    border-style: dotted;
+}
 pre {
     background-color: #eeeeee;
     border: 1px solid black;
@@ -39,6 +42,9 @@ th {
 th, td {
     padding-right: 1em;
 }
+th {
+    border-bottom: 1px solid black;
+}
 ul.keys {
     margin: 0 0.5em 0.5em;
     padding-left: 1em;
@@ -47,6 +53,8 @@ ul.keys a {
     text-decoration: none;
 }
 </style>
+
+{% block header %}{% endblock %}
 
 <title>FRIwall</title>
 

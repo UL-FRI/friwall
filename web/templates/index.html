@@ -14,18 +14,14 @@
 <dl>
 <dt><a href="{{ url_for('nodes') }}">Status</a>
 <dd>status opek v požarnem zidu
-<dt><a href="{{ url_for('config.index') }}">Nastavitve</a>
-<dd>nastavitve aplikacije FRIwall
-<dt><a href="{{ url_for('ipsets.index') }}">Območja IP</a>
-<dd>definicije območij IP
+<dt><a href="{{ url_for('ipsets.index') }}">Omrežja</a>
+<dd>območja IP, naslovi NAT in skupine za VPN
 <dt><a href="{{ url_for('rules.index') }}">Urejanje pravil</a>
 <dd>pravila za posredovanje prometa
-<dt><a href="{{ url_for('nat.index') }}">NAT</a>
-<dd>javni naslovi za pisarniška omrežja
 <dt><a href="{{ url_for('config.edit', name='netmap') }}">Netmap</a>
 <dd>statične 1:1 preslikave naslovov za strežniška omrežja
-<dt><a href="{{ url_for('config.edit', name='groups') }}">Skupine</a>
-<dd>preslikave uporabnikov LDAP v pisarniška omrežja
+<dt><a href="{{ url_for('config.index') }}">Nastavitve</a>
+<dd>nastavitve aplikacije FRIwall
 </dl>
 </section>
 {% endif %}

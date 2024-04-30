@@ -1,8 +1,18 @@
 {% extends 'base.html' %}
+{% block header %}
+<style>
+tbody > tr:nth-child(odd) {
+    background-color: #eeeeee;
+}
+td {
+    vertical-align: top;
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <p>
-Urejate pravilo #{{ index }}. V pravilih lahko uporabljate imena območij IP, prikazana spodaj. <a href="{{ url_for('rules.index') }}">Seznam pravil.</a>
+Urejate pravilo #{{ index }}. <a href="{{ url_for('rules.index') }}">Seznam pravil.</a>
 
 <form id="request" method="POST">
 <p>
@@ -18,19 +28,28 @@ Uporabniki, ki lahko o(ne)mogočijo pravilo<br>
 
 <p>
 <label for="text">Pravila nftables</label>
-<textarea id="text" name="text" style="width: 100%; height: 20em;">{{ rule.text }}</textarea>
+<textarea id="text" name="text" style="width: 100%; height: 20em;" placeholder="iif @inside ip saddr @from ip daddr @to acceptiif @inside ip6 saddr @from/6 ip6 daddr @to/6 accept">
+{{- rule.text }}
+</textarea>
 <p><button id="submit" type="submit">Shrani</button>
 </form>
 
-<table>
+<p>
+V pravilih lahko uporabljamo spodnja območja IP, npr. <code>@pr5</code> in <code>@pr5/6</code> za območji IPv4 in IPv6 učilnice 5. Za notranja omrežja uporabimo vmesnik <code>@inside</code>, za zunanja pa vmesnik <code>@outside</code>. Primere z razlago najdemo v <a href="https://wiki.nftables.org">dokumentaciji nftables</a>.
+
+<table style="width: 100%;">
 <thead>
-<th>Območje<th>IP<th>IPv6
+<th>Omrežje
+<th>IP
+<th>IPv6
+<th>VPN
 <tbody>
-{% for network, addresses in ipsets.items() %}
+{% for name, data in ipsets.items() %}
 <tr>
-<td>{{ network }}
-<td>{{ addresses.ip|join('<br>')|safe }}
-<td>{{ addresses.ip6|join('<br>')|safe }}
+<td>{{ name }}
+<td>{{ data.ip|join('<br>')|safe }}
+<td>{{ data.ip6|join('<br>')|safe }}
+<td>{{ data.vpn }}
 {% endfor %}
 </table>
 

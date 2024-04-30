@@ -46,8 +46,6 @@ def edit(index):
 
         with db.locked():
             ipsets = db.read('ipsets')
-            for network, data in db.read('networks').items():
-                ipsets[network] = {'ip': data.get('ip', []), 'ip6': data.get('ip6', [])}
         return flask.render_template('rules/edit.html', index=index, rule=db.load('rules')[index], ipsets=ipsets)
     except IndexError as e:
         return flask.Response(f'invalid rule: {index}', status=400, mimetype='text/plain')
