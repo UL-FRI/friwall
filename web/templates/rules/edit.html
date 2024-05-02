@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 {% block header %}
 <style>
+hr {
+    border-style: dotted;
+    border-color: gray;
+    border-width: 1px 0 0;
+}
 tbody > tr:nth-child(odd) {
     background-color: #eeeeee;
 }
@@ -12,30 +17,40 @@ td {
 
 {% block content %}
 <p>
-Urejate pravilo #{{ index }}. <a href="{{ url_for('rules.index') }}">Seznam pravil.</a>
-
+Urejate pravilo #{{ index }} (<a href="{{ url_for('rules.index') }}">seznam pravil</a>). Pravila so vključena v <a href="https://wiki.nftables.org">nftables</a> <em>filter chain</em> na požarnem zidu. Povzetek filtrov najdemo <a href="https://wiki.nftables.org/wiki-nftables/index.php/Quick_reference-nftables_in_10_minutes#Matches">v dokumentaciji</a>.
 <form id="request" method="POST">
 <p>
 <label for="name">Ime</label><br>
-<input name="name" value="{{ rule.name }}" />
+<input id="name" name="name" value="{{ rule.name }}" />
 
 <p>
-Uporabniki, ki lahko o(ne)mogočijo pravilo<br>
+<label for="newmanager">Skupine, ki lahko o(ne)mogočijo pravilo</label>
+<br>
 {% for manager in rule.managers %}
 <input name="manager" type="text" style="width: 50%" value="{{ manager }}" /><br>
 {% endfor %}
-<input name="manager" type="text" style="width: 50%" value="" />
+<input id="newmanager" name="manager" type="text" style="width: 50%" value="" />
 
 <p>
 <label for="text">Pravila nftables</label>
-<textarea id="text" name="text" style="width: 100%; height: 20em;" placeholder="iif @inside ip saddr @from ip daddr @to acceptiif @inside ip6 saddr @from/6 ip6 daddr @to/6 accept">
+<textarea id="text" name="text" style="width: 100%; height: 8em;" placeholder="iif @inside ip saddr @from ip daddr @to acceptiif @inside ip6 saddr @from/6 ip6 daddr @to/6 accept">
 {{- rule.text }}
 </textarea>
 <p><button id="submit" type="submit">Shrani</button>
 </form>
 
+<hr>
+
 <p>
-V pravilih lahko uporabljamo spodnja območja IP, npr. <code>@pr5</code> in <code>@pr5/6</code> za območji IPv4 in IPv6 učilnice 5. Za notranja omrežja uporabimo vmesnik <code>@inside</code>, za zunanja pa vmesnik <code>@outside</code>. Primere z razlago najdemo v <a href="https://wiki.nftables.org">dokumentaciji nftables</a>.
+Promet z naslova <em>src</em> iz zunanjega omrežja na naslov <em>dst</em> na notranjem dovolimo z
+
+<pre><code>iif @outside oif @inside ip saddr src ip daddr dst accept</code></pre>
+
+<p>
+Za naslova <em>src</em> in <em>dst</em> lahko uporabimo <a href="{{ url_for('ipsets.index') }}">definirana omrežja</a>, prikazana v spodnji tabeli. Za omrežje <code>net</code> uporabimo oznaki <code>@net</code> in <code>@net/6</code> za naslove IPv4 in IPv6. Da npr. preprečimo povezave iz omrežja <code>classroom</code> izven omrežja FRI, uporabimo pravili
+
+<pre><code>iif @inside ip saddr @classroom ip daddr != @fri drop
+iif @inside ip6 saddr @classroom/6 ip6 daddr != @fri/6 drop</code></pre>
 
 <table style="width: 100%;">
 <thead>

@@ -9,15 +9,18 @@ td > input {
 
 {% block content %}
 <p>
-Urejate naslovna območja. Za statična omrežja lahko določimo naslov NAT in skupino za VPN. Za lastna območja lahko poleg tega definiramo enega ali več obsegov IP, ločenih s presledki.
+Urejate območja IP za <a href="{{ url_for('rules.index') }}">posredovalna pravila</a> na požarnem zidu.
 
 <p>
-NAT se izvaja na območjih, kjer je nastavljen. Uporabniki VPN imajo glede na skupine v AD enake dostope kot območja, za katera so nastavljene te skupine.
+NAT se izvaja za notranja omrežja, kjer je nastavljen. Če nastavimo skupino AD, bodo omrežju dodane naprave, ki so jih v VPN povezali uporabniki v tej skupini. Vse naprave v posameznem omrežju so dostopne med sabo in za njih veljajo ista posredovalna pravila.
+
+<p>
+Imen in naslovnih prostorov fizičnih omrežij ne moremo spreminjati. Za svoja omrežja lahko definiramo vsa polja. Omrežje odstranimo tako, da mu pobrišemo ime.
 
 <form id="request" method="POST">
 <table style="width: 100%;">
 <thead>
-<th>Ime<th>IP<th>IPv6<th>NAT<th>VPN
+<th>Omrežje<th>IP<th>IPv6<th>NAT<th>VPN
 <tbody>
 {% for name, data in ipsets.items() %}
 <tr>
@@ -28,11 +31,11 @@ NAT se izvaja na območjih, kjer je nastavljen. Uporabniki VPN imajo glede na sk
 <td style=""><input name="vpn" value="{{ data.vpn }}" />
 {% endfor %}
 <tr>
-<td style="max-width: 4em;"><input name="name" />
-<td style="max-width: 5em;"><input name="ip" />
-<td style="max-width: 8em;"><input name="ip6" />
+<td style="max-width: 4em;"><input name="name" placeholder="novo območje" />
+<td style="max-width: 5em;"><input name="ip" placeholder="10.0.0.0/8" />
+<td style="max-width: 8em;"><input name="ip6" placeholder="fc00:1::/64 fc00:2::/64" />
 <td style="max-width: 5em;"><input name="nat" />
-<td><input name="vpn" />
+<td><input name="vpn" placeholder="skupina v AD" />
 </table>
 <p><button id="submit" type="submit">Shrani</button>
 </form>
