@@ -134,11 +134,12 @@ def save_config():
                 # Forwarding rules for VPN users.
                 if vpn_networks := sorted(name for name, data in ipsets.items() if data.get('vpn')):
                     nft_forward = 'iif @inside oif @inside ip saddr @{name} ip daddr @{name} accept\n'
+                    nft_forward6 = 'iif @inside oif @inside ip6 saddr @{name}/6 ip6 daddr @{name}/6 accept\n'
                     f.write('# forward from the VPN interface to physical networks and back\n')
                     for name in vpn_networks:
                         f.write(nft_forward.format(name=name))
                     for name in vpn_networks:
-                        f.write(nft_forward.format(name=f'{name}/6'))
+                        f.write(nft_forward6.format(name=name))
                     f.write('\n')
 
                 # Custom forwarding rules.
