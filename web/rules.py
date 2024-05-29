@@ -53,24 +53,24 @@ def edit(index):
 def can_toggle(user, rule):
     return user.is_admin or not user.groups.isdisjoint(rule.get('managers', ()))
 
-@blueprint.route('/manage')
+@blueprint.route('/manage', methods=('GET', 'POST'))
 @flask_login.login_required
 def manage():
-    rules = [rule|{'index': index} for index, rule in enumerate(db.load('rules'))
-                if can_toggle(flask_login.current_user, rule)]
-    return flask.render_template('rules/manage.html', rules=rules)
-
-@blueprint.route('/toggle/<int:index>/<enable>')
-@flask_login.login_required
-def toggle(index, enable):
-    try:
-        with db.locked():
-            rules = db.read('rules')
-            if not can_toggle(flask_login.current_user, rules[index]):
+    with db.locked():
+        rules = db.read('rules')
+        allowed = set(rule['name'] for rule in rules if can_toggle(flask_login.current_user, rule))
+        if flask.request.method == 'POST':
+            # check that all posted rules are allowed for this user
+            posted = set(flask.request.form.getlist('rule'))
+            if posted - allowed:
                 return flask.Response('forbidden', status=403, mimetype='text/plain')
-            rules[index]['enabled'] = (enable == 'true')
+
+            # set status for posted rules
+            enabled = set(flask.request.form.getlist('enabled'))
+            for rule in rules:
+                if rule['name'] in posted:
+                    rule['enabled'] = (rule['name'] in enabled)
             db.write('rules', rules)
-        system.run(system.save_config)
-        return flask.redirect(flask.url_for('rules.manage'))
-    except IndexError as e:
-        return flask.Response(f'invalid rule: {index}', status=400, mimetype='text/plain')
+            system.run(system.save_config)
+            return flask.redirect(flask.url_for('rules.manage'))
+    return flask.render_template('rules/manage.html', rules=[rule for rule in rules if rule['name'] in allowed])
